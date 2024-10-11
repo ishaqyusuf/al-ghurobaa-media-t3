@@ -1,11 +1,10 @@
 import type { FileFlavor } from "@grammyjs/files";
 import type { CallbackQueryMiddleware, CommandContext, Context } from "grammy";
-import type { Message } from "grammy/types";
 import { Bot, BotError, GrammyError, HttpError } from "grammy";
 
 import { env } from "~/env";
+import { commandList } from "./form-composer";
 import { channel_log, logger } from "./logger";
-import { commandList } from "./utils";
 
 type ChatContext = Context;
 type FileContext = FileFlavor<Context>;

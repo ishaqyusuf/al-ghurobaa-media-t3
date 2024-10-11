@@ -5,7 +5,7 @@ import {
   composeForm,
   formField,
   initComposer,
-} from "../../utils";
+} from "../../utils/form-composer";
 
 const cmdName: CommandNames = "create_author";
 const form = composeForm({

@@ -1,20 +1,24 @@
 import { Message } from "grammy/types";
 import { z } from "zod";
 
-import { sql } from "@acme/db";
+import { eq, sql } from "@acme/db";
 import { db } from "@acme/db/client";
 import {
+  Album,
   Blog,
   BlogAudio,
   BlogImage,
+  BlogTag,
   CreateBlogSchema,
   MediaAuthor,
+  Tag,
   TelegramChannel,
   Thumbnail,
 } from "@acme/db/schema";
 
-import { MyContext } from "../bot";
-import { first, replyParams } from "../helper";
+import { globalCtx } from "../route";
+import { MyContext } from "../utils/bot";
+import { first, replyParams } from "../utils/helper";
 
 type CreateBlogDTO = z.infer<typeof CreateBlogSchema>;
 export async function createAudioBlog(ctx: MyContext) {
@@ -24,7 +28,15 @@ export async function createAudioBlog(ctx: MyContext) {
     await ctx.reply(`unable to create`, replyParams(ctx));
     return;
   }
-  const author = await createAuthor(audioData.performer);
+  const gData =
+    globalCtx.botInstance == "open_album_for_import"
+      ? globalCtx.audioData || {}
+      : {};
+  const author = gData?.authorId
+    ? {
+        ...gData,
+      }
+    : await createAuthor(audioData.performer);
   const thumbnailId = await createThumbnail(msg);
 
   const audio = first(
@@ -32,12 +44,12 @@ export async function createAudioBlog(ctx: MyContext) {
       .insert(BlogAudio)
       .values({
         fileId: audioData.file_id,
+        ...gData,
         duration: audioData.duration,
         fileSize: audioData.file_size,
         fileName: audioData.file_name,
         mimeType: audioData.mime_type,
         thumbnailId,
-        authorId: author?.id,
         fileUniqueId: audioData.file_unique_id,
         performer: audioData.performer,
         // performer: msg.audio.thumbnail.
@@ -54,14 +66,42 @@ export async function createAudioBlog(ctx: MyContext) {
     // publishedAt: new Date(),
   });
   if (!blog) return await ctx.reply("unable to create blog", replyParams(ctx));
+  await generateTags(blog.id, msg?.caption ?? msg?.text ?? "");
+
   await ctx.reply(
     [
       `Blog Id: ${blog.id}`,
       `File Name: ${audio.fileName}`,
       `Author: ${author?.name}`,
+      `Album Id: ${audio?.albumId}`,
       `Description: ${blog?.description}`,
     ].join("\n"),
     replyParams(ctx),
+  );
+}
+export async function generateTags(blogId, content: string) {
+  const tagList = content
+    ?.split(" ")
+    ?.map((s) => s?.trim())
+    .filter((s) => s.startsWith("#"))
+    .map((s) => s.replace("#", "").replaceAll("_", " "));
+  if (!tagList.length) return;
+  const _t = await db
+    .insert(Tag)
+    .values(
+      tagList.map((title) => ({
+        title,
+      })),
+    )
+    .onConflictDoNothing({
+      target: [Tag.title],
+    })
+    .returning();
+  await db.insert(BlogTag).values(
+    _t.map((t) => ({
+      blogId,
+      tagId: t.id,
+    })),
   );
 }
 export async function createThumbnail(msg: Message) {
@@ -173,4 +213,34 @@ export async function telegramChannelId(msg: Message) {
     return c?.id;
   }
   return null;
+}
+
+export async function albumList() {
+  const albums = await db.query.Album.findMany({
+    with: {
+      mediaAuthor: true,
+    },
+  });
+  return albums.map((l) => ({
+    label: `${l.name} | ${l.mediaAuthor?.name}`,
+    value: `${l.id}`,
+  }));
+}
+export async function albumExists({ id, authorId }) {
+  const a = await db.query.Album.findFirst({
+    where(fields, operators) {
+      return operators.and(
+        operators.eq(Album.id, id),
+        operators.eq(Album.mediaAuthorId, authorId),
+      );
+    },
+  });
+  return a != null;
+}
+export async function createAlbum({ mediaAuthorId, name, albumType }) {
+  const a = await db.insert(Album).values({
+    mediaAuthorId,
+    name,
+    albumType,
+  });
 }

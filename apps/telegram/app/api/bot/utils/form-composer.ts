@@ -1,7 +1,7 @@
 import { Composer, InlineKeyboard } from "grammy";
 
 import type { CmdContext } from "./bot";
-import { globalCtx } from "./route";
+import { globalCtx } from "../route";
 
 const cmd = <T extends string>(command: T, description?: string) =>
   ({
@@ -13,8 +13,9 @@ export const commandList = [
   cmd("upload_media", "Upload Media."),
   cmd("upload_photo", "Upload Photo."),
   cmd("create_author", "Create Author."),
+  cmd("create_album", "Create Album"),
   cmd("add_media_to_album", "Add Media to Album."),
-  cmd("cmddd", "lorem..."),
+  cmd("open_album_for_import", "Open Album for import"),
 ] as const;
 export type CommandNames = (typeof commandList)[number]["command"];
 export type InputType = "btn" | "text";
@@ -100,7 +101,18 @@ export function composeForm<T extends readonly Field[]>({
       });
       return _ctx;
     },
-    _addLists(inputs: Partial<Record<FTypes, ListFn>>) {
+    _addLists(
+      inputs: Partial<
+        Record<
+          FTypes,
+          (
+            keyboard: InlineKeyboard,
+            data: DataType,
+            // cbKeyFn: (k: string) => string,
+          ) => Promise<{ list: { label: string; value: string }[] }>
+        >
+      >,
+    ) {
       Object.entries(inputs).map(([k, fn]) => {
         _ctx._addList(k, fn);
       });
@@ -133,14 +145,15 @@ export const initComposer = (cmdName: CommandNames, form: ComposeForm) => {
     on: {},
   };
   let tempMsgs = [];
-  function _temp({ message_id }) {
-    tempMsgs.push(message_id);
+  function _temp(msg) {
+    if (!msg) return null;
+    tempMsgs.push(msg.message_id);
   }
   async function _clearTemps(ctx) {
     try {
       if (!tempMsgs.length) return;
       // _temp(await _delete)
-      await ctx.api.deleteMessages(ctx.chat.id, tempMsgs);
+      // await ctx.api.deleteMessages(ctx.chat.id, tempMsgs);
 
       // tempMsgs = [];
       // _temp(await ctx.reply("Msg cleared"));
@@ -159,7 +172,7 @@ export const initComposer = (cmdName: CommandNames, form: ComposeForm) => {
   let fieldIndex = 0;
   async function renderField(ctx) {
     const field = form.fields[fieldIndex];
-    _temp(await ctx.reply(`${fieldIndex + 1}. ${field?.title}: `));
+    const title = `${fieldIndex + 1}. ${field?.title}: `;
 
     const _fieldList = form.list[field.field];
     // await ctx.reply(`${_fieldList?.length} list`);
@@ -176,11 +189,11 @@ export const initComposer = (cmdName: CommandNames, form: ComposeForm) => {
         if (index % 0 == 1) keyb.row();
       });
       _temp(
-        await ctx.reply(field.title, {
+        await ctx.reply(null, {
           reply_markup: keyb,
         }),
       );
-    }
+    } else _temp(await ctx.reply(title));
   }
   let formData = {};
 

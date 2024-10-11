@@ -1,4 +1,4 @@
-import { CommandNames } from "./utils";
+import { CommandNames } from "./form-composer";
 
 type Helper = { [cmd in CommandNames]: {} };
 export const __helper: Helper = {} as any;

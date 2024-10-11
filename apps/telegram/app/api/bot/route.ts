@@ -1,9 +1,9 @@
 import { webhookCallback } from "grammy";
 
-import type { CommandNames } from "./utils";
-import { bot } from "./bot";
+import type { CommandNames } from "./utils/form-composer";
 import modules from "./modules";
 import { createAudioBlog, createPhotoBlog } from "./modules/actions";
+import { bot } from "./utils/bot";
 
 interface Props {
   botInstance?: CommandNames;
@@ -11,6 +11,10 @@ interface Props {
     text?: { [cmd in CommandNames]: any };
     audio?: { [cmd in CommandNames]: any };
     file?: { [cmd in CommandNames]: any };
+  };
+  audioData?: {
+    authorId?;
+    albumId?;
   };
 }
 export const globalCtx: Props = {

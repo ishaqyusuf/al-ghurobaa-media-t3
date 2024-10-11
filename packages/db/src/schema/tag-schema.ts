@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text } from "drizzle-orm/pg-core";
 
 import { Blog } from "./blog-schema";
 import { __serialPri, _serialRel, _uuidRel, timeStamps } from "./schema-helper";
