@@ -7,4 +7,10 @@ export default [
   },
   ...baseConfig,
   ...restrictEnvAccess,
+  {
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unsafe-return": "off",
+    },
+  },
 ];

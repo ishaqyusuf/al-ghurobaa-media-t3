@@ -27,14 +27,16 @@ export const blogRouter = {
           images: true, // Include associated images
         },
       });
-
+      //   const withAudio = blogs.filter(a => a.au)
+      //   blogs[0]?.audio
       // Fetch the total count of posts for pagination purposes
-      const totalPosts = await ctx.db
+      const [totalPosts] = await ctx.db
         .select({ count: count() })
         .from(Blog)
         .where(and());
+      if (!totalPosts) throw new Error();
       // Check if there are more posts to load
-      const hasNextPage = offset + limit < totalPosts;
+      const hasNextPage = offset + limit < totalPosts.count;
       const nextCursor = hasNextPage ? offset + limit : null;
       console.log({ totalPosts });
 

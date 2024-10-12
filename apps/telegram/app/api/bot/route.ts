@@ -2,7 +2,11 @@ import { webhookCallback } from "grammy";
 
 import type { CommandNames } from "./utils/form-composer";
 import modules from "./modules";
-import { createAudioBlog, createPhotoBlog } from "./modules/actions";
+import {
+  createAudioBlog,
+  createBlog,
+  createPhotoBlog,
+} from "./modules/actions";
 import { bot } from "./utils/bot";
 
 interface Props {
@@ -24,27 +28,72 @@ export const globalCtx: Props = {
     file: {} as any,
   },
 };
+const queue = [];
+let running = false;
+const jobQueue = async (fn) => {
+  if (!fn) return;
+  queue.unshift(fn);
+  await nextJob();
+};
+
+const nextJob = async () => {
+  console.log("NEXT JOB");
+  setTimeout(async () => {
+    if (running) return;
+    running = true;
+    const job = queue.pop();
+    if (!job) return;
+    await job();
+    setTimeout(async () => {
+      running = false;
+      // console.log("DONE...");
+      // console.log("PENDING...", queue.length);
+      await nextJob();
+    }, 500);
+  }, 1000);
+};
 // console.log("GLOBAL INIT");
 
-bot.use(modules);
-bot.command("quit", async (c) => {
-  if (!globalCtx.botInstance) return;
-  globalCtx.botInstance = null;
-  await c.deleteMessage();
-  // const _c = await c.reply("Command Quitted");
-});
+// bot.use(modules);
+// bot.command("quit", async (c) => {
+//   if (!globalCtx.botInstance) return;
+//   globalCtx.botInstance = null;
+//   await c.deleteMessage();
+//   // const _c = await c.reply("Command Quitted");
+// });
 bot.on("message:text", async (ctx) => {
-  const cmd = globalCtx?.on?.text?.[globalCtx.botInstance];
-  if (cmd) {
-    await cmd(ctx);
-    return;
-  } else {
-  }
+  await jobQueue(async () => {
+    // if (ctx.message.reply_to_message?.audio?.file_id) {
+    //   await ctx.reply(JSON.stringify(ctx.message));
+    //   return;
+    // }
+
+    await ctx.reply(JSON.stringify(ctx.message));
+    await createBlog(ctx.message);
+  });
+  // const cmd = globalCtx?.on?.text?.[globalCtx.botInstance];
+  // if (cmd) {
+  //   await cmd(ctx);
+  //   return;
+  // } else {
+  // }
+  // console.log(ctx.message);
+  // await ctx.reply(JSON.stringify(ctx.message));
+
+  // await createBlog(ctx.message);
 });
 bot.on("message:audio", async (ctx) => {
-  await createAudioBlog(ctx as any);
+  await jobQueue(async () => {
+    await ctx.reply(JSON.stringify(ctx.message));
+    // await createAudioBlog(ctx as any);
+  });
+  // await createAudioBlog(ctx as any);
 });
 bot.on("message:document", async (ctx) => {});
-bot.on("message:photo", async (ctx) => await createPhotoBlog(ctx as any));
+bot.on("message:photo", async (ctx) => {
+  await jobQueue(async () => {
+    await createPhotoBlog(ctx as any);
+  });
+});
 
 export const POST = webhookCallback(bot, "std/http");

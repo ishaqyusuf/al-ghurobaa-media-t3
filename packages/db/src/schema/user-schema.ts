@@ -50,7 +50,7 @@ export const TelegramChannel = pgTable("telegram_channel", {
 });
 export const Notification = pgTable("Notification", {
   id: __serialPri,
-  userId: _uuidRel("user_id", User.id),
+  userId: _uuidRel("user_id", User.id).notNull(),
   message: text("message").notNull(),
   type: varchar("type", { length: 20 }).notNull(), // e.g., "blog_update", "note_published"
   isRead: boolean("is_read").default(false),

@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
 
+import type { BlogPost } from "./components/type";
 import { api } from "~/utils/api";
 import AudioPostCard from "./components/audio-post-card";
 import { PicturePostCard } from "./components/picture-post-card";
@@ -65,10 +66,9 @@ export default function Index() {
 
     observer.observe(post); // Observe the post card element
   };
-  const renderPostCard = ({ item }) => {
-    // if (!item) return null;
-    return <Text className="text-white">Item - 1</Text>;
-    if (item.picture) {
+  const renderPostCard = ({ item }: { item: BlogPost }) => {
+    return <View></View>;
+    if (item.images) {
       return (
         <View
           ref={(ref) =>

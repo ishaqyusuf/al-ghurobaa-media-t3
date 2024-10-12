@@ -1,7 +1,8 @@
-import { Message } from "grammy/types";
-import { z } from "zod";
+import type { Message } from "grammy/types";
+import type { z } from "zod";
 
-import { eq, sql } from "@acme/db";
+import type { CreateBlogSchema } from "@acme/db/schema";
+import { and, eq, sql } from "@acme/db";
 import { db } from "@acme/db/client";
 import {
   Album,
@@ -9,15 +10,14 @@ import {
   BlogAudio,
   BlogImage,
   BlogTag,
-  CreateBlogSchema,
   MediaAuthor,
   Tag,
   TelegramChannel,
   Thumbnail,
 } from "@acme/db/schema";
 
+import type { MyContext } from "../utils/bot";
 import { globalCtx } from "../route";
-import { MyContext } from "../utils/bot";
 import { first, replyParams } from "../utils/helper";
 
 type CreateBlogDTO = z.infer<typeof CreateBlogSchema>;
@@ -152,7 +152,32 @@ export async function createAuthor(name) {
 export async function createBlog(
   msg: Message,
   extras: Partial<CreateBlogDTO> = {},
+  ctx?,
 ) {
+  const fuid = msg.reply_to_message?.audio?.file_unique_id;
+  if (fuid) {
+    const [rse] = await db
+      .select()
+      .from(BlogAudio)
+      .innerJoin(Blog, eq(BlogAudio.id, Blog.audioId))
+      .where(eq(BlogAudio.fileUniqueId, fuid));
+    // console.log(rse);
+    if (rse.blog) {
+      await db.update(Blog).set({}).where(eq(Blog.id, rse.blog.id));
+      console.log("updated");
+
+      return;
+    }
+    return;
+    // const audio = await db.query.BlogAudio.findFirst({
+    //   where: and(eq(BlogAudio.fileUniqueId, fuid)),
+    //   with: {
+    //     // blog: true,
+    //   },
+    // });
+
+    // audio.id
+  }
   const channelId = await telegramChannelId(msg);
   const blogs = await db
     .insert(Blog)

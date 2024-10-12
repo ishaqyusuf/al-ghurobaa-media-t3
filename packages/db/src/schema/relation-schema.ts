@@ -48,6 +48,10 @@ export const BlogAudioRelations = relations(BlogAudio, ({ one }) => ({
     fields: [BlogAudio.albumId],
     references: [Album.id],
   }),
+  blog: one(Blog, {
+    fields: [BlogAudio.id],
+    references: [Blog.audioId],
+  }),
   thumbnail: one(Thumbnail, {
     fields: [BlogAudio.thumbnailId],
     references: [Thumbnail.id],

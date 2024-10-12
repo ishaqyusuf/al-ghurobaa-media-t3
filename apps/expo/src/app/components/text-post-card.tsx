@@ -1,5 +1,9 @@
-import { View } from "react-native";
+import { Text, View } from "react-native";
 
 export const TextPostCard = ({ post }) => {
-  return <View></View>;
+  return (
+    <View>
+      <Text>TEXT</Text>
+    </View>
+  );
 };

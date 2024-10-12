@@ -4,20 +4,14 @@ import { Audio } from "expo-av";
 import * as FileSystem from "expo-file-system";
 import { Feather } from "@expo/vector-icons"; // Play/Pause icon
 
+import type { BlogPost } from "./type";
 import { formatBytes, formatDuration } from "~/utils/utils";
 
 // import { fetchAudio } from "./fetchAudio"; // Your tRPC or API call to fetch audio
 // import { formatBytes, formatDuration } from "./utils"; // Utility functions for formatting size and duration
 
 interface AudioPostCardProps {
-  post: {
-    id: number;
-    title: string;
-    caption?: string;
-    album?: string;
-    author?: string;
-    audio: { fileId: string };
-  };
+  post: BlogPost;
 }
 
 const AudioPostCard: React.FC<AudioPostCardProps> = ({ post }) => {
@@ -52,7 +46,7 @@ const AudioPostCard: React.FC<AudioPostCardProps> = ({ post }) => {
       setSound(loadedSound);
       setAudioUri(filePath);
       setAudioSize(fileInfo.size || null);
-      setAudioDuration(status?.durationMillis || null);
+      setAudioDuration(status.durationMillis || null);
       setIsPlaying(true);
     } else {
       // Fetch audio URL via tRPC or API
@@ -65,7 +59,7 @@ const AudioPostCard: React.FC<AudioPostCardProps> = ({ post }) => {
       );
       setSound(streamedSound);
       setAudioUri(audioUrl);
-      setAudioDuration(status?.durationMillis || null);
+      setAudioDuration(status.durationMillis || null);
       setIsPlaying(true);
 
       // Download audio and save to local storage in the background

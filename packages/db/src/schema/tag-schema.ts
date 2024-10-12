@@ -12,8 +12,8 @@ export const Tag = pgTable("tags", {
 
 export const BlogTag = pgTable("blog_tag", {
   id: __serialPri,
-  tagId: _serialRel("tag_id", Tag.id),
-  blogId: _serialRel("blog_id", Blog.id),
+  tagId: _serialRel("tag_id", Tag.id).notNull(),
+  blogId: _serialRel("blog_id", Blog.id).notNull(),
   ...timeStamps,
 });
 export const SearchLog = pgTable("search_log", {

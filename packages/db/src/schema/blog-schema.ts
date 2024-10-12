@@ -28,8 +28,8 @@ export const Album = pgTable("album", {
     length: 200,
     enum: ["series", "conference"],
   }),
-  mediaAuthorId: _serialRel("media_author_id", MediaAuthor.id, false),
-  thumbnailId: _serialRel("thumbnail_id", Thumbnail.id, false),
+  mediaAuthorId: _serialRel("media_author_id", MediaAuthor.id),
+  thumbnailId: _serialRel("thumbnail_id", Thumbnail.id),
   ...timeStamps,
 });
 
@@ -42,11 +42,11 @@ export const BlogAudio = pgTable("blog_audio", {
   fileName: varchar("file_name", { length: 200 }),
   duration: integer("duration"),
   fileUniqueId: varchar("file_unique_id", { length: 50 }),
-  authorId: _serialRel("author_id", MediaAuthor.id, false),
+  authorId: _serialRel("author_id", MediaAuthor.id),
   fileSize: integer("file_size"),
-  albumId: _serialRel("album_id", Album.id, false),
+  albumId: _serialRel("album_id", Album.id),
   publishedAt: timestamp("published_at"),
-  thumbnailId: _serialRel("thumbnail_id", Thumbnail.id, false),
+  thumbnailId: _serialRel("thumbnail_id", Thumbnail.id),
   ...timeStamps,
 });
 
@@ -70,15 +70,11 @@ export const Blog = pgTable("blog", {
   status: varchar("status", { length: 20 }),
   published: boolean("published").default(false),
   meta: jsonb("meta").default({}),
-  authorId: _uuidRel("author_id", User.id, false),
-  audioId: _serialRel("audio_id", BlogAudio.id, false),
+  authorId: _uuidRel("author_id", User.id),
+  audioId: _serialRel("audio_id", BlogAudio.id),
   publishedAt: timestamp("published_at"),
   telegramDate: integer("date"),
-  telegramChannelId: _serialRel(
-    "telegram_channel_id",
-    TelegramChannel.id,
-    false,
-  ),
+  telegramChannelId: _serialRel("telegram_channel_id", TelegramChannel.id),
   ...timeStamps,
 });
 export const BlogImage = pgTable("blog_image", {
@@ -86,7 +82,7 @@ export const BlogImage = pgTable("blog_image", {
   fileId: varchar("file_id", { length: 200 }),
   width: integer("width"),
   height: integer("height"),
-  blogId: _serialRel("blog_id", Blog.id),
+  blogId: _serialRel("blog_id", Blog.id).notNull(),
   fileUniqueId: varchar("file_unique_id", { length: 50 }),
   fileSize: integer("file_size"),
   ...timeStamps,
@@ -97,7 +93,7 @@ export const BlogNote = pgTable("blog_note", {
   id: __serialPri,
   userId: _uuidRel("user_id", User.id),
   note: text("note").notNull(),
-  blogId: _serialRel("blog_id", Blog.id),
+  blogId: _serialRel("blog_id", Blog.id).notNull(),
   status: varchar("status", { length: 20 }),
   published: boolean("published").default(false),
   ...timeStamps,
@@ -105,8 +101,8 @@ export const BlogNote = pgTable("blog_note", {
 
 export const Comment = pgTable("comments", {
   id: __serialPri,
-  blogId: _serialRel("blog_id", Blog.id),
-  userId: _uuidRel("user_id", User.id),
+  blogId: _serialRel("blog_id", Blog.id).notNull(),
+  userId: _uuidRel("user_id", User.id).notNull(),
   content: text("content").notNull(),
   status: varchar("status", { length: 20 }).notNull(), // e.g., "approved", "pending", "rejected"
   ...timeStamps,
