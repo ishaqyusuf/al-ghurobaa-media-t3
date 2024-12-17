@@ -284,6 +284,9 @@ importers:
       superjson:
         specifier: 2.2.1
         version: 2.2.1
+      telegram:
+        specifier: ^2.26.8
+        version: 2.26.8
       zod:
         specifier: 'catalog:'
         version: 3.23.8

@@ -31,6 +31,7 @@
     "react": "catalog:react18",
     "react-dom": "catalog:react18",
     "superjson": "2.2.1",
+    "telegram": "^2.26.8",
     "zod": "catalog:"
   },
   "devDependencies": {
