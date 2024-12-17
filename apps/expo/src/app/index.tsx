@@ -53,38 +53,34 @@ export default function Index() {
     },
     [fetchNextPage, hasNextPage, isFetchingNextPage],
   );
-  const handlePostInView = (post, inViewCallback) => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          inViewCallback();
-          observer.disconnect(); // Stop observing once image is loaded
-        }
-      },
-      { threshold: 0.5 }, // Trigger when the card is 50% in view
-    );
-
-    observer.observe(post); // Observe the post card element
-  };
+  // const onViewableItemsChanged = ({ viewableItems }) => {
+  //   viewableItems.forEach(({ item }) => {
+  //     if (item.picture && !isPictureLoaded(item.id)) {
+  //       // Trigger image loading
+  //       loadImage(item.picture.fileId);
+  //     }
+  //   });
+  // };
   const renderPostCard = ({ item }: { item: BlogPost }) => {
-    return <View></View>;
-    if (item.images) {
-      return (
-        <View
-          ref={(ref) =>
-            handlePostInView(ref, () => {
-              /* Load picture here */
-            })
-          }
-        >
-          <PicturePostCard post={item} />
-        </View>
-      );
-    } else if (item.audio) {
-      return <AudioPostCard post={item} />;
-    } else {
-      return <TextPostCard post={item} />;
-    }
+    // return <View></View>;
+    return (
+      <View className="border-b border-muted p-4">
+        {item.images.length ? (
+          <>
+            <PicturePostCard post={item} />
+          </>
+        ) : item.audio?.id ? (
+          <>
+            <Text className="text-white">AUDIO</Text>
+            {/* <AudioPostCard post={item} /> */}
+          </>
+        ) : (
+          <>
+            <TextPostCard post={item} />
+          </>
+        )}
+      </View>
+    );
   };
   const listRef = useRef<FlatList>(null);
   return (
@@ -96,6 +92,7 @@ export default function Index() {
       keyExtractor={(item) => item?.id.toString()}
       renderItem={renderPostCard}
       onScroll={handleScroll}
+      viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
       refreshControl={
         // Add refresh control
         <RefreshControl

@@ -197,6 +197,7 @@ export async function createBlog(
 }
 export async function createPhotoBlog(ctx: MyContext) {
   const msg = ctx.message;
+  await ctx.reply("UPLOADING...");
   const blog = await createBlog(msg);
   if (!blog) {
     await ctx.reply("unable to create");

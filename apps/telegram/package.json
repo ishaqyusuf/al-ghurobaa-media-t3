@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@acme/db": "workspace:*",
+    "@acme/ui": "workspace:*",
     "@grammyjs/files": "^1.1.1",
     "@t3-oss/env-nextjs": "^0.10.1",
     "grammy": "^1.29.0",
@@ -22,12 +23,14 @@
     "react": "catalog:react18",
     "react-dom": "catalog:react18",
     "superjson": "2.2.1",
+    "telegram": "^2.26.8",
     "winston": "^3.14.2",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@acme/eslint-config": "workspace:*",
     "@acme/prettier-config": "workspace:*",
+    "@acme/tailwind-config": "workspace:*",
     "@acme/tsconfig": "workspace:*",
     "@types/node": "^20.14.9",
     "@types/react": "catalog:react18",
@@ -36,6 +39,7 @@
     "eslint": "catalog:",
     "jiti": "^1.21.6",
     "prettier": "catalog:",
+    "tailwindcss": "^3.4.4",
     "typescript": "catalog:"
   },
   "prettier": "@acme/prettier-config"

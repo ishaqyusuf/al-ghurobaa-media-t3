@@ -53,6 +53,8 @@
     "TELEGRAM_TOKEN",
     "AUTH_SECRET",
     "TELEGRAM_WEBHOOK",
+    "TELEGRAM_APP_ID",
+    "TELEGRAM_API_HASH",
     "PORT"
   ],
   "globalPassThroughEnv": [

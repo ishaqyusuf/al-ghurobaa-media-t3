@@ -39,6 +39,12 @@ export const BlogRelations = relations(Blog, ({ one, many }) => ({
   images: many(BlogImage),
   tags: many(BlogTag),
 }));
+export const BlogImageRelations = relations(BlogImage, ({ one, many }) => ({
+  blog: one(Blog, {
+    fields: [BlogImage.blogId],
+    references: [Blog.id],
+  }),
+}));
 export const BlogAudioRelations = relations(BlogAudio, ({ one }) => ({
   author: one(MediaAuthor, {
     fields: [BlogAudio.authorId],

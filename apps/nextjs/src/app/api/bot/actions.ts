@@ -2,10 +2,9 @@ import type { Message } from "grammy/types";
 import type { z } from "zod";
 
 import type { CreateBlogSchema } from "@acme/db/schema";
-import { eq, sql } from "@acme/db";
+import { sql } from "@acme/db";
 import { db } from "@acme/db/client";
 import {
-  Album,
   Blog,
   BlogAudio,
   BlogImage,

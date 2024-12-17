@@ -17,6 +17,8 @@ export const env = createEnv({
   server: {
     POSTGRES_URL: z.string().url(),
     TELEGRAM_TOKEN: z.string(),
+    TELEGRAM_API_HASH: z.string(),
+    TELEGRAM_APP_ID: z.string(),
     LOG_CHANNEL: z.string(),
     LOG_LEVEL: z.string(),
     TELEGRAM_WEBHOOK: z.string(),

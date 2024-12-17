@@ -4,17 +4,13 @@ import { Audio } from "expo-av";
 import * as FileSystem from "expo-file-system";
 import { Feather } from "@expo/vector-icons"; // Play/Pause icon
 
-import type { BlogPost } from "./type";
+import type { CardProps } from "./type";
 import { formatBytes, formatDuration } from "~/utils/utils";
 
 // import { fetchAudio } from "./fetchAudio"; // Your tRPC or API call to fetch audio
 // import { formatBytes, formatDuration } from "./utils"; // Utility functions for formatting size and duration
 
-interface AudioPostCardProps {
-  post: BlogPost;
-}
-
-const AudioPostCard: React.FC<AudioPostCardProps> = ({ post }) => {
+const AudioPostCard = ({ post }: CardProps) => {
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);

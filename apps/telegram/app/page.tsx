@@ -8,7 +8,10 @@ export default async function HomePage() {
   }
   return (
     <div className="">
-      <a href={href(true)}>Register Webhook</a>
+      {/* <a href={href(true)}>Register Webhook</a> */}
+      <div className="flex h-screen flex-col">
+        <span>L:RE</span>
+      </div>
     </div>
   );
 }

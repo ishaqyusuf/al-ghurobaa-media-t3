@@ -1,7 +1,6 @@
 import { webhookCallback } from "grammy";
 
 import type { CommandNames } from "./utils/form-composer";
-import modules from "./modules";
 import {
   createAudioBlog,
   createBlog,
@@ -67,7 +66,6 @@ bot.on("message:text", async (ctx) => {
     //   await ctx.reply(JSON.stringify(ctx.message));
     //   return;
     // }
-
     await ctx.reply(JSON.stringify(ctx.message));
     await createBlog(ctx.message);
   });
@@ -84,8 +82,8 @@ bot.on("message:text", async (ctx) => {
 });
 bot.on("message:audio", async (ctx) => {
   await jobQueue(async () => {
-    await ctx.reply(JSON.stringify(ctx.message));
-    // await createAudioBlog(ctx as any);
+    // await ctx.reply(JSON.stringify(ctx.message));
+    await createAudioBlog(ctx as any);
   });
   // await createAudioBlog(ctx as any);
 });
