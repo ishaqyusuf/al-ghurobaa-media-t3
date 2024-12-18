@@ -12,7 +12,9 @@ export async function loadChannels() {
   try {
     return await channels({});
   } catch (error) {
-    await logoutAction();
+    console.log(error);
+    return [];
+    // await logoutAction();
   }
 }
 export async function logoutAction() {

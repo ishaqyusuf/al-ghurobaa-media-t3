@@ -2,6 +2,7 @@
 
 import fs from "fs";
 import { Api, TelegramClient } from "telegram";
+import { sleep } from "telegram/Helpers";
 import { StringSession } from "telegram/sessions";
 
 import { env } from "~/env";
@@ -44,27 +45,35 @@ interface ChannelsProps {
 }
 export async function channels({ offsetId = 0, limit = 100 }: ChannelsProps) {
   const client = await initializeClient();
-  const dialogs = (
-    await client.invoke(
-      new Api.messages.GetDialogs({
-        offsetDate: 0,
-        offsetId: 0,
-        offsetPeer: new Api.InputPeerEmpty(),
-        limit: 250, // Adjust this value to fetch more dialogs
-        //    hash: 0,
-      }),
-    )
-  ).toJSON();
+
+  const result = await client.invoke(
+    new Api.messages.GetDialogs({
+      //   offsetDate: 0,
+      offsetId: 0,
+      offsetPeer: new Api.InputPeerEmpty(),
+      limit: 100, // Adjust this value to fetch more dialogs
+      //    hash: 0,
+    }),
+  );
+  const channelDialogs = result.dialogs.filter(
+    (dialog) => dialog.peer instanceof Api.PeerChannel,
+  );
+  console.log(result.dialogs?.length);
+
+  const dialogs = result.toJSON();
   if ("chats" in dialogs) {
-    return dialogs.chats.map((channel, index) => ({
+    const result = dialogs.chats.map((channel, index) => ({
       id: channel,
       title: channel.title,
       className: channel.className,
       username: channel.username || null,
       isBroadcast: channel.broadcast || false, // Indicates if it's a broadcast channel
       // raw: index < 10 ? channel : null,
+      rtl: isRTL(channel.title),
       photo: channel.photo?.photoId,
     }));
+
+    return result;
   }
 }
 export async function logout() {
@@ -100,7 +109,13 @@ export const confirmCode = async (phoneNumber: string, phoneCode: string) => {
 };
 export const loginUser = async (phoneNumber) => {
   const client = await initializeClient();
+  console.log(phoneNumber);
+
   const resp = await client.sendCode(CREDENTIAL, phoneNumber);
   saveSession(client.session.save());
   return resp;
+};
+const isRTL = (text: string) => {
+  const rtlChars = /[\u0591-\u07FF\uFB1D-\uFDFD\uFE70-\uFEFC]/; // Unicode range for RTL characters
+  return rtlChars.test(text);
 };

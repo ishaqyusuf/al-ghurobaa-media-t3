@@ -19,7 +19,10 @@ export default function PageClient({}) {
   });
   const state = form.watch("state");
   async function signIn() {
-    const resp = await loginUser(form.getValues("phoneNumber"));
+    const data = form.getValues();
+    const resp = await loginUser(data.phoneNumber);
+    console.log(resp);
+
     if (resp.isCodeViaApp) form.setValue("state", "code");
     else {
       console.log(resp);
@@ -29,7 +32,7 @@ export default function PageClient({}) {
   const route = useRouter();
   async function verifyCode() {
     const data = form.getValues();
-    const res = await confirmCode(data.code, data.phoneNumber);
+    const res = await confirmCode(data.phoneNumber, data.code);
     if (res.id) route.push("/mt-proto/channels");
   }
   return (
@@ -49,8 +52,8 @@ export default function PageClient({}) {
             <>
               <InputControl
                 control={form.control}
-                label="Phone Number"
-                name="phoneNumber"
+                label="Login Code"
+                name="code"
               />
               <Button onClick={verifyCode}>Verify</Button>
             </>
