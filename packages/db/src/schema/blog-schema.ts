@@ -102,8 +102,8 @@ export const BlogNote = pgTable("blog_note", {
 export const Comment = pgTable("comments", {
   id: __serialPri,
   blogId: _serialRel("blog_id", Blog.id).notNull(),
+  commentBlogId: _serialRel("comment_blog_id", Blog.id).notNull(),
   userId: _uuidRel("user_id", User.id).notNull(),
-  content: text("content").notNull(),
   status: varchar("status", { length: 20 }).notNull(), // e.g., "approved", "pending", "rejected"
   ...timeStamps,
 });

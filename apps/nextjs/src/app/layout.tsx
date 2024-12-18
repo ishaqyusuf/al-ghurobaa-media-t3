@@ -10,6 +10,10 @@ import { TRPCReactProvider } from "~/trpc/react";
 
 import "~/app/globals.css";
 
+import Link from "next/link";
+
+import { Button } from "@acme/ui/button";
+
 import { env } from "~/env";
 
 export const metadata: Metadata = {
@@ -50,7 +54,13 @@ export default function RootLayout(props: { children: React.ReactNode }) {
           GeistMono.variable,
         )}
       >
-        <span>a</span>
+        <div className="flex h-12 max-w-sm justify-center p-2">
+          <div className="">
+            <Button asChild variant={"ghost"}>
+              <Link href={"/mt-proto"}>MT-PROTO</Link>
+            </Button>
+          </div>
+        </div>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <TRPCReactProvider>{props.children}</TRPCReactProvider>
           <div className="absolute bottom-4 right-4">
