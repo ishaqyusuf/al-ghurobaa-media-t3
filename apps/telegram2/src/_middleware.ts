@@ -31,7 +31,7 @@ export default async function middleware(req: NextRequest) {
   //   hostname === "localhost:7000" ||
   //   hostname === env.NEXT_PUBLIC_ROOT_DOMAIN
   // ) {
-  //   // console.log("..");
+  //   // console.log("@acme/ui");
   //   return NextResponse.rewrite(
   //     new URL(`/public${path === "/" ? "" : path}`, req.url),
   //   );

@@ -1,10 +1,11 @@
-import { ControllerProps, FieldPath, FieldValues } from "react-hook-form";
+import type { ControllerProps, FieldPath, FieldValues } from "react-hook-form";
 
-import { cn } from "..";
-import { Button } from "../button";
-import { FormControl, FormField, FormItem, FormLabel } from "../form";
-import { Input } from "../input";
-import { Textarea } from "../textarea";
+import { cn } from "@acme/ui";
+
+import { Button } from "./button";
+import { FormControl, FormField, FormItem, FormLabel } from "./form";
+import { Input } from "./input";
+import { Textarea } from "./textarea";
 
 interface Props<T> {
   label?: string;

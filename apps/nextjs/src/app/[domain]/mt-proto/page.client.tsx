@@ -3,10 +3,10 @@
 import { useRouter } from "next/navigation";
 
 import { Button } from "@acme/ui/button";
-import InputControl from "@acme/ui/controlled/input-control";
 import { Form, useForm } from "@acme/ui/form";
 import { toast } from "@acme/ui/toast";
 
+import InputControl from "../../../../../../packages/ui/dist/src/input-control";
 import { confirmCode, loginUser } from "./lib";
 
 export default function PageClient({}) {

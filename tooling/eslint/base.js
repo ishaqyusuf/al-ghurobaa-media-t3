@@ -31,6 +31,10 @@ export const restrictEnvAccess = tseslint.config({
           "Use `import { env } from '~/env'` instead to ensure validated types.",
       },
     ],
+    "@typescript-eslint/no-unnecessary-condition": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/prefer-nullish-coalescing": "off",
+    "@typescript-eslint/require-await": "off",
   },
 });
 

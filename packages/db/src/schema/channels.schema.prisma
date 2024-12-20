@@ -1,0 +1,33 @@
+model Channel {
+    id        Int       @unique @default(autoincrement())
+    createdAt DateTime? @default(now()) @db.Timestamp(0)
+    updatedAt DateTime? @updatedAt
+    deletedAt DateTime?
+
+    title    String?
+    username String  @unique
+
+    forwards MessageForward[]
+
+    blogs Blog[]
+
+    @@unique([username, deletedAt])
+}
+
+model MessageForward {
+    id        Int       @unique @default(autoincrement())
+    createdAt DateTime? @default(now()) @db.Timestamp(0)
+    updatedAt DateTime? @updatedAt
+
+    deletedAt DateTime?
+
+    messageId     Int
+    publishedDate DateTime
+    channelId     Int
+
+    status String
+
+    channel Channel @relation(fields: [channelId], references: [id])
+
+    @@unique([messageId, channelId, deletedAt])
+}

@@ -1,0 +1,49 @@
+model Media {
+    id              Int              @unique @default(autoincrement())
+    fileId          Int?
+    mimeType        String // audio.. pdf.. img
+    file            File?            @relation(fields: [fileId], references: [id])
+    title           String?
+    authorId        Int?
+    author          Author?          @relation(fields: [authorId], references: [id])
+    mediaIndexId    Int?             @unique
+    albumAudioIndex AlbumAudioIndex?
+    Blog            Blog?            @relation(fields: [blogId], references: [id])
+    blogId          Int?
+
+    @@index([fileId])
+}
+
+model File {
+    id        Int       @unique @default(autoincrement())
+    createdAt DateTime? @default(now()) @db.Timestamp(0)
+    updatedAt DateTime? @updatedAt
+    deletedAt DateTime?
+
+    fileType     String
+    fileId       String
+    fileUniqueId String?
+    fileSize     Float?
+    fileName     String?
+    mimeType     String?
+    d            String?
+    width        Float?
+    height       Float?
+    duration     Float?
+    medias       Media[]
+    Thumbnail    Thumbnail[]
+}
+
+model Thumbnail {
+    id        Int       @unique @default(autoincrement())
+    createdAt DateTime? @default(now()) @db.Timestamp(0)
+    updatedAt DateTime? @updatedAt
+    deletedAt DateTime?
+
+    fileId Int
+    blogId Int?
+    albums Album[]
+    blogs  Blog[]
+
+    file File? @relation(fields: [fileId], references: [id])
+}

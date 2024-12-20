@@ -1,0 +1,60 @@
+// model BlogAudio {
+//     id           Int              @unique @default(autoincrement())
+//     createdAt    DateTime?        @default(now()) @db.Timestamp(0)
+//     updatedAt    DateTime?        @updatedAt
+//     deletedAt    DateTime?
+//     title        String?
+//     blog         Blog?
+//     authorId     Int?
+//     fileId       Int?
+//     author       Author?          @relation(fields: [authorId], references: [id])
+//     file         File?            @relation(fields: [fileId], references: [id])
+//     audioIndexId Int?             @unique
+//     albumIndex   AlbumAudioIndex?
+
+//     @@index([authorId])
+//     @@index([fileId])
+// }
+
+model Album {
+    id        Int       @unique @default(autoincrement())
+    createdAt DateTime? @default(now()) @db.Timestamp(0)
+    updatedAt DateTime? @updatedAt
+    deletedAt DateTime?
+
+    name      String
+    albumType String?
+
+    albumAuthorId  Int?
+    author         Author?           @relation(fields: [albumAuthorId], references: [id])
+    thumbnailId    Int?
+    thumbnail      Thumbnail?        @relation(fields: [thumbnailId], references: [id])
+    audioIndexList AlbumAudioIndex[]
+
+    @@index([albumAuthorId])
+    @@index([thumbnailId])
+}
+
+model Author {
+    id        Int       @unique @default(autoincrement())
+    createdAt DateTime? @default(now()) @db.Timestamp(0)
+    updatedAt DateTime? @updatedAt
+    deletedAt DateTime?
+
+    name   String? @unique
+    nameAr String? @unique
+
+    medias Media[]
+    albums Album[]
+}
+
+model AlbumAudioIndex {
+    id          Int       @unique @default(autoincrement())
+    createdAt   DateTime? @default(now()) @db.Timestamp(0)
+    updatedAt   DateTime? @updatedAt
+    deletedAt   DateTime?
+    albumId     Int?
+    album       Album?    @relation(fields: [albumId], references: [id])
+    blogAudioId Int       @unique
+    blogAudio   Media?    @relation(fields: [blogAudioId], references: [mediaIndexId])
+}
