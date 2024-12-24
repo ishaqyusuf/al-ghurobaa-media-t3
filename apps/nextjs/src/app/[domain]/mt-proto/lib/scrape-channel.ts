@@ -3,42 +3,46 @@
 import { Api } from "telegram";
 
 import type { MimeType, ScrapedMessage } from "~/type";
-import { getChannelWithLastScrapeMessageId } from "~/data-access/forward-chat.dta";
+import {
+  getChannelWithLastScrapeMessageId,
+  registerIncomingMessages,
+} from "~/data-access/forward-chat.dta";
 import { initializeClient } from ".";
-import { forwardMessage } from "./forward-chat";
 
 interface Props {
   limit?;
-  photo?: boolean;
+  image?: boolean;
   video?: boolean;
   text?: boolean;
   audio?: boolean;
   document?: boolean;
+  scrapeLatest?: boolean;
   lastMessageId?;
 }
-export async function scrapeChannel(
-  channelName,
-  { limit = 1, ...props }: Props,
-) {
+export async function scrapeChannel(channelName, { ...props }: Props) {
   const client = await initializeClient();
+  console.log(props);
 
   const channel = await client.getEntity(`t.me/${channelName}`);
   const dbChannel = await getChannelWithLastScrapeMessageId(channelName);
   const response = await client.invoke(
     new Api.messages.GetHistory({
       peer: channel,
-      offsetId: props.lastMessageId || dbChannel.lastMessageId,
-      limit,
+      offsetId: props.scrapeLatest ? 0 : props.lastMessageId, // || dbChannel.lastMessageId,
+      // offsetId: 12003,
+      limit: props.limit || 0,
     }),
   );
   if ("messages" in response) {
     let lastScrapeMessageId;
+    console.log(response.messages.length);
+    const unknownFormats = [];
     const formattedMessages: ScrapedMessage[] = response.messages
       .filter((msg, index) => {
         if (response.messages.length == index + 1) lastScrapeMessageId = msg.id;
         if ("media" in msg) {
           if (msg.media instanceof Api.MessageMediaPhoto) {
-            return props.photo;
+            return props.image;
           } else if (msg.media instanceof Api.MessageMediaDocument) {
             const mt: MimeType = (msg?.media?.document as any)?.mimeType;
             switch (mt) {
@@ -47,8 +51,30 @@ export async function scrapeChannel(
               case "video/mp4":
                 return props.video;
               case "audio/mpeg":
+              case "audio/MP3":
+              case "audio/mp3":
+              case "audio/mp4":
+              case "audio/m4a":
+              case "audio/aac":
+              case "audio/ogg":
+              case "audio/amr":
                 return props.audio;
               default:
+                const [type, pr] = mt?.split("/");
+                switch (type) {
+                  case "audio":
+                    console.log(mt);
+                    return props.audio;
+                  case "image":
+                    console.log(mt);
+                    return props.image;
+                  case "video":
+                    console.log(mt);
+                    return props.video;
+                  default:
+                    unknownFormats.push(mt);
+                }
+
                 return false;
             }
           }
@@ -62,25 +88,32 @@ export async function scrapeChannel(
           channelId: dbChannel.channel.id,
         };
       });
+    console.log(lastScrapeMessageId);
+    console.log(formattedMessages);
+
     try {
       if (!formattedMessages.length) throw new Error("Nothing to scrape");
-      const fwrd = await forwardMessage(
-        client,
-        channelName,
-        "@al_ghurobaa_bot",
-        formattedMessages,
-      );
+      const messageIds = await registerIncomingMessages(formattedMessages);
+      // const fwrd = await forwardMessage(
+      //   client,
+      //   channelName,
+      //   "@al_ghurobaa_bot",
+      //   formattedMessages,
+      // );
       return {
-        status: "success",
-        scrapped: fwrd?.length,
+        status: `Scraped: ${messageIds.length}`,
+        scrapped: messageIds?.length,
+        messageIds,
+        lastScrapeMessageId,
+        unknownFormats,
       };
     } catch (error) {
-      if (lastScrapeMessageId)
-        return await scrapeChannel(channelName, {
-          limit,
-          ...props,
-          lastMessageId: lastScrapeMessageId,
-        });
+      // if (lastScrapeMessageId)
+      //   return await scrapeChannel(channelName, {
+      //     limit,
+      //     ...props,
+      //     lastMessageId: lastScrapeMessageId,
+      //   });
     }
   }
   return {

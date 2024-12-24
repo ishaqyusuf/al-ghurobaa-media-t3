@@ -2,7 +2,6 @@
 
 import fs from "fs";
 import { Api, TelegramClient } from "telegram";
-import { sleep } from "telegram/Helpers";
 import { StringSession } from "telegram/sessions";
 
 import { env } from "~/env";

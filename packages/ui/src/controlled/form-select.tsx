@@ -4,24 +4,24 @@ import { ControllerProps, FieldPath, FieldValues } from "react-hook-form";
 
 import { cn } from "@acme/ui";
 
-import { Button } from "./button";
+import { Button } from "../button";
 import {
   Command,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
-} from "./command";
-import { FormControl, FormField, FormItem, FormLabel } from "./form";
-import { Popover, PopoverContent, PopoverTrigger } from "./popover";
-import { ScrollArea } from "./scroll-area";
+} from "../command";
+import { FormControl, FormField, FormItem, FormLabel } from "../form";
+import { Popover, PopoverContent, PopoverTrigger } from "../popover";
+import { ScrollArea } from "../scroll-area";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "./select";
+} from "../select";
 
 export interface FormSelectProps<T> {
   label?;

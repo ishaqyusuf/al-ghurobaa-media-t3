@@ -1,17 +1,16 @@
 import type { ControllerProps, FieldPath, FieldValues } from "react-hook-form";
-import { useFormContext } from "react-hook-form";
 
 import { cn } from "@acme/ui";
 
-import { Checkbox } from "./checkbox";
+import { Checkbox } from "../checkbox";
 import {
   FormControl,
   FormDescription,
   FormField,
   FormItem,
   FormLabel,
-} from "./form";
-import { Switch } from "./switch";
+} from "../form";
+import { Switch } from "../switch";
 
 interface Props<T> {
   label?: string | any;

@@ -2,11 +2,11 @@
 
 import { useRouter } from "next/navigation";
 
-import { Button } from "@acme/ui/button";
+import Button from "@acme/ui/common/button";
+import FormInput from "@acme/ui/controlled/form-input";
 import { Form, useForm } from "@acme/ui/form";
 import { toast } from "@acme/ui/toast";
 
-import InputControl from "../../../../../../packages/ui/dist/src/input-control";
 import { confirmCode, loginUser } from "./lib";
 
 export default function PageClient({}) {
@@ -41,7 +41,7 @@ export default function PageClient({}) {
         <div className="grid gap-4">
           {state == "number" ? (
             <>
-              <InputControl
+              <FormInput
                 control={form.control}
                 label="Phone Number"
                 name="phoneNumber"
@@ -50,12 +50,12 @@ export default function PageClient({}) {
             </>
           ) : (
             <>
-              <InputControl
+              <FormInput
                 control={form.control}
                 label="Login Code"
                 name="code"
               />
-              <Button onClick={verifyCode}>Verify</Button>
+              <Button action={verifyCode}>Verify</Button>
             </>
           )}
         </div>
