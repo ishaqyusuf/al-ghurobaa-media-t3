@@ -97,8 +97,8 @@ export async function scrapeChannel(channelName, { ...props }: Props) {
       // const fwrd = await forwardMessage(
       //   client,
       //   channelName,
-      //   "@al_ghurobaa_bot",
       //   formattedMessages,
+      // "@al_ghurobaa_bot",
       // );
       return {
         status: `Scraped: ${messageIds.length}`,

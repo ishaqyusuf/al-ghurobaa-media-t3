@@ -96,7 +96,7 @@ export async function createAudioBlog(msg: Message) {
   // return `${author?.name}`;
   if (!audio) return "unable to create";
   const audioId = audio.id;
-  const blog = await createBlog(msg, {
+  const blog = awat safeCreateBlog(msg, {
     audioId,
     blogType: "audio",
   });
@@ -143,7 +143,7 @@ export async function createBlog(
   return blog;
 }
 export async function createPhotoBlog(msg: Message) {
-  const blog = await createBlog(msg);
+  const blog = awat safeCreateBlog(msg);
   if (!blog) return "unable to create";
   await db.insert(BlogImage).values(
     (msg.photo ?? []).map((p) => {

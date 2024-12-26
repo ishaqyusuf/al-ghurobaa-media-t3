@@ -1,21 +1,3 @@
-// model BlogAudio {
-//     id           Int              @unique @default(autoincrement())
-//     createdAt    DateTime?        @default(now()) @db.Timestamp(0)
-//     updatedAt    DateTime?        @updatedAt
-//     deletedAt    DateTime?
-//     title        String?
-//     blog         Blog?
-//     authorId     Int?
-//     fileId       Int?
-//     author       Author?          @relation(fields: [authorId], references: [id])
-//     file         File?            @relation(fields: [fileId], references: [id])
-//     audioIndexId Int?             @unique
-//     albumIndex   AlbumAudioIndex?
-
-//     @@index([authorId])
-//     @@index([fileId])
-// }
-
 model Album {
     id        Int       @unique @default(autoincrement())
     createdAt DateTime? @default(now()) @db.Timestamp(0)
@@ -25,11 +7,13 @@ model Album {
     name      String
     albumType String?
 
-    albumAuthorId  Int?
-    author         Author?           @relation(fields: [albumAuthorId], references: [id])
-    thumbnailId    Int?
-    thumbnail      Thumbnail?        @relation(fields: [thumbnailId], references: [id])
-    audioIndexList AlbumAudioIndex[]
+    albumAuthorId   Int?
+    author          Author?           @relation(fields: [albumAuthorId], references: [id])
+    thumbnailId     Int?
+    thumbnail       Thumbnail?        @relation(fields: [thumbnailId], references: [id])
+    audioIndexList  AlbumAudioIndex[]
+    albumLocation   AlbumLocation?    @relation(fields: [albumLocationId], references: [id])
+    albumLocationId Int?
 
     @@index([albumAuthorId])
     @@index([thumbnailId])

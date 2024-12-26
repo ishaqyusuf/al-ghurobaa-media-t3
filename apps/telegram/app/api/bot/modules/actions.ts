@@ -60,7 +60,7 @@ export async function createAudioBlog(ctx: MyContext) {
     return await ctx.reply("unable to create audio", replyParams(ctx));
   }
   const audioId = audio.id;
-  const blog = await createBlog(msg, {
+  const blog = awat safeCreateBlog(msg, {
     audioId,
     blogType: "audio",
     // publishedAt: new Date(),
@@ -198,7 +198,7 @@ export async function createBlog(
 export async function createPhotoBlog(ctx: MyContext) {
   const msg = ctx.message;
   await ctx.reply("UPLOADING...");
-  const blog = await createBlog(msg);
+  const blog = awat safeCreateBlog(msg);
   if (!blog) {
     await ctx.reply("unable to create");
     return;

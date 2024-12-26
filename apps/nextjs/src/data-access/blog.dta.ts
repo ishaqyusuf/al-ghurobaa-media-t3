@@ -1,6 +1,7 @@
 "use server";
 
 import type { Message } from "grammy/types";
+import { Api } from "grammy";
 
 import { db } from "@acme/db";
 
@@ -16,11 +17,48 @@ interface Props {
   audio?: Message["audio"];
   origin?: Message["forward_origin"];
   text?: boolean;
+  ctx?: any;
+}
+export async function safeCreateBlog(props: Props) {
+  // const react = props.ctx.s;
+  // console.log("..");
+  // await props.ctx.success();
+  // return;
+  try {
+    const r = await createBlog(props);
+    await props.ctx.success("👍");
+    return r;
+  } catch (error) {
+    if (error instanceof Error) {
+      const e = error.message.split("\n")[0];
+      console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+      console.log(error);
+      console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+      console.log({ m: error.message });
+      console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+      // console.log({ m: error.message });
+      // console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+      const data = [error.message, error.stack]
+        .filter(Boolean)
+        .join("-------------------------------------------");
+      if (error.message)
+        await db.telegramError.create({
+          data: {
+            data,
+          },
+        });
+    } else {
+      console.error("UNKNOWN ERROR");
+      console.log(error);
+    }
+    await props.ctx.error("💔");
+  }
 }
 export async function createBlog(props: Props) {
   let blog;
-  const channelId = undefined;
-  // if(props.origin?.)
+  const watcher = await getCurrentWatcher();
+  const watcherId = watcher?.id || undefined;
+  const channelId = watcher?.channelId ? watcher.channelId : undefined;
   const { photo, audio, thumbnail, message, video, document } = props;
   if (photo) {
     const files = await db.file.createManyAndReturn({
@@ -34,18 +72,14 @@ export async function createBlog(props: Props) {
           fileSize: formatSize(p.file_size, undefined),
         };
       }),
-    });
-    const medias = await db.media.createManyAndReturn({
-      data: photo.map((photo, index) => ({
-        mimeType: "image/png" as MimeType,
-        fileId: files?.[index]?.id,
-      })),
+      skipDuplicates: true,
     });
     blog = await db.blog.create({
       data: {
         content: message.caption,
         type: "image" as BlogType,
         channelId,
+        watcherId,
         medias: {
           createMany: {
             data: photo.map((photo, index) => ({
@@ -61,6 +95,7 @@ export async function createBlog(props: Props) {
     if (props.text) {
       blog = await db.blog.create({
         data: {
+          watcherId,
           content: message.text,
           channelId,
           type: "text" as BlogType,
@@ -72,15 +107,6 @@ export async function createBlog(props: Props) {
       > &
         NonNullable<Message["video"]>;
       if (!result) return null;
-      const exists = await db.file.findFirst({
-        where: {
-          fileId: result.file_id,
-        },
-      });
-      if (exists) {
-        console.log("ALREADY SAVED");
-        return;
-      }
       const {
         height,
         width,
@@ -97,7 +123,19 @@ export async function createBlog(props: Props) {
       blog = await db.blog.create({
         data: {
           content: message.caption,
-          channelId,
+          type: blogTypeByMime(mime_type),
+          channel: channelId
+            ? {
+                connect: {
+                  id: channelId,
+                },
+              }
+            : undefined,
+          watcher: watcherId
+            ? {
+                connect: { id: watcherId },
+              }
+            : undefined,
           thumbnail: thumbnail
             ? {
                 create: {
@@ -134,7 +172,7 @@ export async function createBlog(props: Props) {
                   width,
                   duration: duration,
                   mimeType: mime_type,
-
+                  fileUniqueId: file_unique_id,
                   fileId: file_id,
                   fileName: file_name,
                   fileSize: formatSize(file_size),
@@ -147,7 +185,95 @@ export async function createBlog(props: Props) {
       });
     }
   }
-  console.log({ blog, props });
+  if (blog) {
+    await messageCaptured(watcherId);
+  }
+  console.log(blog);
 
   return blog;
+}
+function blogTypeByMime(mime): BlogType {
+  switch (mime as MimeType) {
+    case "application/pdf":
+      return "pdf";
+    default:
+      return mime?.split("/")[0];
+  }
+}
+export async function getCurrentWatcher() {
+  const watcher = await db.messageForwardWatcher.findFirst({
+    where: {
+      status: "in-progress",
+      forwardedAt: {
+        lte: new Date(Date.now() - 1000 * 60 * 2),
+      },
+    },
+    include: {
+      channel: true,
+    },
+  });
+  return watcher;
+}
+export async function messageCaptured(watcherId) {
+  if (watcherId)
+    await db.messageForwardWatcher.update({
+      where: { id: watcherId },
+      data: {
+        capturedCount: {
+          increment: 1,
+        },
+      },
+    });
+}
+export async function clearBlogsAction(channelId?) {
+  await db.thumbnail.deleteMany({
+    where: !channelId
+      ? undefined
+      : {
+          blogs: {
+            every: {
+              channelId,
+            },
+          },
+        },
+  });
+  await db.file.deleteMany({
+    where: !channelId
+      ? undefined
+      : {
+          medias: {
+            every: {
+              blog: {
+                channelId,
+              },
+            },
+          },
+        },
+  });
+  await db.media.deleteMany({
+    where: !channelId
+      ? undefined
+      : {
+          blog: { channelId },
+        },
+  });
+  await db.blog.deleteMany({
+    where: !channelId
+      ? undefined
+      : {
+          channelId,
+        },
+  });
+}
+export async function resetChannelBlogAction(channelId) {
+  await db.messageForward.updateMany({
+    where: { channelId },
+    data: {
+      forwardedAt: null,
+    },
+  });
+  await db.messageForwardWatcher.deleteMany({
+    where: { channelId },
+  });
+  await clearBlogsAction(channelId);
 }

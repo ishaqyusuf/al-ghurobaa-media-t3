@@ -52,10 +52,7 @@ export default function Channel({ params }) {
     name: "scraper.scrapingRecords",
   });
   const scraper = form.watch("scraper");
-  async function forwardMessage() {
-    const resp = await scrapeChannel(username, {});
-    load();
-  }
+
   function load() {
     getChatStat(username)
       .then((resp) => {

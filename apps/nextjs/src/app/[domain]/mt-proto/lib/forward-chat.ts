@@ -1,16 +1,13 @@
 import { Api } from "telegram";
 
-import { registerIncomingMessages } from "~/data-access/forward-chat.dta";
-import { ScrapedMessage } from "~/type";
-
 export async function forwardMessage(
   client,
   fromChat,
-  toChat,
-  messages: ScrapedMessage[],
+  messageIds: number[],
+  toChat = "@al_ghurobaa_bot",
 ) {
   try {
-    const messageIds = await registerIncomingMessages(messages);
+    // const messageIds = await registerIncomingMessages(messages);
     if (!messageIds.length) throw new Error("All messages previously regisred");
     const result = await client.invoke(
       new Api.messages.ForwardMessages({

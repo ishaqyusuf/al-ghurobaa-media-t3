@@ -12,6 +12,7 @@ export default [
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unsafe-return": "off",
       "@typescript-eslint/no-redundant-type-constituents": "off",
+      "@typescript-eslint/consistent-type-definitions": "off",
     },
   },
 ];

@@ -11,7 +11,8 @@ model Channel {
 
     forwards MessageForward[]
 
-    blogs Blog[]
+    blogs    Blog[]
+    watchers MessageForwardWatcher[]
 
     @@unique([username, deletedAt])
 }
@@ -20,10 +21,9 @@ model MessageForward {
     id        Int       @unique @default(autoincrement())
     createdAt DateTime? @default(now()) @db.Timestamp(0)
     updatedAt DateTime? @updatedAt
+    deletedAt DateTime?
 
     forwardedAt DateTime?
-
-    deletedAt DateTime?
 
     messageId     Int
     publishedDate DateTime
@@ -31,7 +31,27 @@ model MessageForward {
 
     status String
 
-    channel Channel @relation(fields: [channelId], references: [id])
+    channel   Channel                @relation(fields: [channelId], references: [id])
+    watcher   MessageForwardWatcher? @relation(fields: [watcherId], references: [id])
+    watcherId String?
 
     @@unique([messageId, channelId, deletedAt])
+}
+
+model MessageForwardWatcher {
+    id            String
+    channelId     Int
+    channel       Channel          @relation(fields: [channelId], references: [id])
+    forwardCount  Int
+    capturedCount Int
+    status        String // in-progress
+    forwardedAt   DateTime?
+    forwards      MessageForward[]
+    blogs         Blog[]
+
+    createdAt DateTime? @default(now()) @db.Timestamp(0)
+    updatedAt DateTime? @updatedAt
+    deletedAt DateTime?
+
+    @@unique([id])
 }

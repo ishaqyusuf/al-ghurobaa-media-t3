@@ -67,7 +67,7 @@ bot.on("message:text", async (ctx) => {
     //   return;
     // }
     await ctx.reply(JSON.stringify(ctx.message));
-    await createBlog(ctx.message);
+    awat safeCreateBlog(ctx.message);
   });
   // const cmd = globalCtx?.on?.text?.[globalCtx.botInstance];
   // if (cmd) {
@@ -78,7 +78,7 @@ bot.on("message:text", async (ctx) => {
   // console.log(ctx.message);
   // await ctx.reply(JSON.stringify(ctx.message));
 
-  // await createBlog(ctx.message);
+  // awat safeCreateBlog(ctx.message);
 });
 bot.on("message:audio", async (ctx) => {
   await jobQueue(async () => {

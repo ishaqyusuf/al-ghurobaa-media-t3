@@ -16,7 +16,14 @@ export async function lastId(model, _default = 0, where?) {
 }
 export function formatSize(fileSize, def?) {
   if (!fileSize) return undefined;
-  return fileSize / 1_048_576;
+  const fs = fileSize / 1_048_576;
+  // convert to 2 decimal place integer.
+  return +toFixed(fs);
+}
+export function toFixed(value) {
+  const number = typeof value == "string" ? parseFloat(value) : value;
+  if (isNaN(value) || !value) return value;
+  return number.toFixed(2);
 }
 export function containsOnlyEnglish(text) {
   const englishRegex = /^[A-Za-z\s]+$/; // Matches only English letters and spaces
