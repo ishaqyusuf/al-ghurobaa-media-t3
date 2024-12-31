@@ -6,6 +6,7 @@ import {
   Text,
   View,
 } from "react-native";
+// import { FlatList } from "react-native-reanimated/lib/typescript/Animated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
 import { infiniteQueryOptions, useInfiniteQuery } from "@tanstack/react-query";
@@ -17,48 +18,39 @@ import { TextPostCard } from "./components/text-post-card";
 
 export default function Index() {
   const utils = api.useUtils();
-  const { data, status, refetch, ...ct } = api.blog.index.useQuery({});
-  // const {
-  //   data,
-  //   isLoading,
-  //   hasNextPage,
-  //   fetchNextPage,
-  //   isFetchingNextPage,
-  //   isRefetching,
-  //   refetch,
-  //   status,
-  // } = useInfiniteQuery(
-  //   infiniteQueryOptions({
-  //     queryKey: ["posts"],
-  //     getNextPageParam: (_lastGroup, groups) => groups.length,
-  //     initialPageParam: 0,
-  //     refetchOnWindowFocus: false,
-  //     // throwOnError(error, query) {
-  //     //   console.error(error);
-  //     // },
-  //     queryFn: ({ pageParam = 0 }) => {
-  //       try {
-  //         return api.blog.index.useQuery({
-  //           offset: pageParam,
-  //           limit: 10,
-  //         });
-  //       } catch (error) {
-  //         console.error("Error fetching posts:", error);
-  //         throw error;
-  //       }
-  //     },
-  //   }),
-  // );
-  //  api.blog.index.useQuery
+  const {
+    data,
+    isLoading,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+    refetch,
+  } = useInfiniteQuery(
+    infiniteQueryOptions({
+      queryKey: ["posts"],
+      // getNextPageParam: (lastPage) => lastPage.nextCursor,
+      getNextPageParam: (_lastGroup, groups) => groups.length,
+      initialPageParam: 0,
+      refetchOnWindowFocus: false,
+
+      queryFn: ({ pageParam = 0 }) => {
+        return api.blog.index.useQuery({
+          offset: pageParam as any,
+          limit: 10,
+        });
+      },
+    }),
+  );
   const list = useMemo(() => {
-    return data?.posts ?? [];
+    return data?.pages ? data.pages.flat() : [];
   }, [data]);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Function to handle refreshing
   const handleRefresh = async () => {
-    await refetch();
-    console.log("REFETCHING");
+    setIsRefreshing(true); // Start refreshing
+    await refetch(); // Call your function to refetch posts (adjust to your logic)
+    setIsRefreshing(false); // Stop refreshing
   };
   const handleScroll = useCallback(
     (event) => {
@@ -68,12 +60,11 @@ export default function Index() {
         contentSize.height - (contentOffset.y + layoutMeasurement.height);
 
       // Trigger fetch when we are about 5 posts away from reaching the bottom
-      // if (distanceToBottom < 500 && hasNextPage && !isFetchingNextPage) {
-      //   fetchNextPage();
-      // }
+      if (distanceToBottom < 500 && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
     },
-    // [fetchNextPage, hasNextPage, isFetchingNextPage],
-    [],
+    [fetchNextPage, hasNextPage, isFetchingNextPage],
   );
   // const onViewableItemsChanged = ({ viewableItems }) => {
   //   viewableItems.forEach(({ item }) => {
@@ -84,29 +75,25 @@ export default function Index() {
   //   });
   // };
   const renderPostCard = ({ item }: { item: BlogPost }) => {
+    // return <View></View>;
     return (
-      <View>
-        <Text>LS: amet</Text>
+      <View className="border-b border-muted p-4">
+        {item.images.length ? (
+          <Fragment>
+            <PicturePostCard post={item} />
+          </Fragment>
+        ) : item.audio?.id ? (
+          <Fragment>
+            <Text className="text-white">AUDIO</Text>
+            {/* <AudioPostCard post={item} /> */}
+          </Fragment>
+        ) : (
+          <Fragment>
+            <TextPostCard post={item} />
+          </Fragment>
+        )}
       </View>
     );
-    // return (
-    //   <View className="border-b border-muted p-4">
-    //     {item.images.length ? (
-    //       <Fragment>
-    //         <PicturePostCard post={item} />
-    //       </Fragment>
-    //     ) : item.audio?.id ? (
-    //       <Fragment>
-    //         <Text className="text-white">AUDIO</Text>
-    //         {/* <AudioPostCard post={item} /> */}
-    //       </Fragment>
-    //     ) : (
-    //       <Fragment>
-    //         <TextPostCard post={item} />
-    //       </Fragment>
-    //     )}
-    //   </View>
-    // );
   };
   const listRef = useRef<FlatList>(null);
   return (
@@ -126,18 +113,11 @@ export default function Index() {
           onRefresh={handleRefresh} // Bind refresh handler
         />
       }
-      ListHeaderComponent={
-        <View>
-          <Text>LIST HEADER</Text>
-          {/* <Text>{(isRefetching || isLoading) && "REFETCHING>>>"}</Text> */}
-          <Text>{status}</Text>
-        </View>
+      ListFooterComponent={
+        isFetchingNextPage ? (
+          <ActivityIndicator size="small" color="#0000ff" />
+        ) : null
       }
-      // ListFooterComponent={
-      //   isFetchingNextPage ? (
-      //     <ActivityIndicator size="small" color="#0000ff" />
-      //   ) : null
-      // }
       // onEndReached={() => {
       //   if (hasNextPage && !isFetchingNextPage) {
       //     fetchNextPage();

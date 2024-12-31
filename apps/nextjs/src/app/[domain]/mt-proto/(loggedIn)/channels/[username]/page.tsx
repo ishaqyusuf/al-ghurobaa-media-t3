@@ -1,14 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import Button from "@acme/ui/common/button";
+import { Menu } from "@acme/ui/common/menu";
 import FormCheckbox from "@acme/ui/controlled/form-checkbox";
 import FormInput from "@acme/ui/controlled/form-input";
 import { Form, useFieldArray, useForm } from "@acme/ui/form";
 import { toast } from "@acme/ui/toast";
 
 import type { GetChannelStat } from "~/data-access/forward-chat.dta";
+import Container, { Section } from "~/app/_components/container";
+import Header from "~/app/_components/header";
 import {
   clearChannelRecord,
   getChatStat,
@@ -26,11 +29,10 @@ export default function Channel({ params }) {
     load();
   }, []);
   const defaultValues = {
-    limit: 10,
+    limit: 100,
     scrapeLatest: false,
-
     scrapeProps: {
-      document: false,
+      document: true,
       audio: true,
       image: true,
       text: true,
@@ -61,6 +63,10 @@ export default function Channel({ params }) {
           form.reset({
             scrapeProps: resp?.meta?.scrapeForm,
           });
+        setLastMessageId({
+          new: resp?.lastMessageId,
+          old: null,
+        });
       })
       .catch((e) => {
         toast.error("something went wrong");
@@ -70,48 +76,16 @@ export default function Channel({ params }) {
     await clearChannelRecord(username);
     load();
   }
-  useEffect(() => {
-    if (scraper.scraping && scraper.scrapeUid && !scraper.paused) {
-      __scrape()
-        .then((r) => {})
-        .catch((e) => {});
-    }
-  }, [scraper.scrapeUid, scraper.scraping, scraper.paused]);
-  async function autoScrape() {
-    form.setValue("scraper.scraping", true);
-    const c = generateRandomString();
-    form.setValue("scraper.scrapeUid", c);
-  }
-  async function __scrape() {
-    const lmid = data?.lastMessageId;
-    const r = await _scrapeChannel();
-    console.log(r);
-    form.setValue("scraper.count", scraper.count + 1);
-    arr.append(r);
-    let msg: string | null = null;
-    if (lmid == r.lastScrapeMessageId) msg = "Last Message id is equal";
-    if (r.status == "error") msg = "Error";
-    if (r.unknownFormats?.length)
-      msg = `Unknown Formats: ${r.unknownFormats.join(", ")}`;
-    if (msg) {
-      form.setValue("scraper.paused", true);
-      form.setValue("scraper.msg", msg);
-    } else
-      setTimeout(() => {
-        form.setValue("scraper.scrapeUid", generateRandomString());
-      }, 2000);
-  }
-  function resume() {
-    form.setValue("scraper.paused", false);
-    form.setValue("scraper.msg", null);
-    form.setValue("scraper.scrapeUid", generateRandomString());
-  }
-  async function _scrapeChannel() {
+  const [lastMessageId, setLastMessageId] = useState<{ old; new }>({
+    old: null,
+    new: null,
+  });
+  const _scrapeChannel = useCallback(async () => {
     const formData = form.getValues();
     const resp = await scrapeChannel(username, {
       ...formData.scrapeProps,
       limit: formData.limit,
-      lastMessageId: data?.lastMessageId,
+      lastMessageId: lastMessageId?.new,
       scrapeLatest: formData.scrapeLatest,
     });
     toast.success(resp.status);
@@ -128,17 +102,79 @@ export default function Channel({ params }) {
       };
     });
     return resp;
+  }, [form, lastMessageId, username]);
+  const __scrape = useCallback(async () => {
+    const r = await _scrapeChannel();
+    console.log(r);
+    form.setValue("scraper.count", scraper.count + 1);
+    arr.append(r);
+    let msg: string | null = null;
+    if (lastMessageId == r.lastScrapeMessageId)
+      msg = "Last Message id is equal";
+    if (r.status == "error") msg = "Error";
+    if (r.unknownFormats?.length)
+      msg = `Unknown Formats: ${r.unknownFormats.join(", ")}`;
+    if (msg) {
+      form.setValue("scraper.paused", true);
+      form.setValue("scraper.msg", msg as any);
+    } //else
+    setLastMessageId((old) => ({
+      ...old,
+      new: r.lastScrapeMessageId,
+    }));
+    // setTimeout(() => {
+    //   form.setValue("scraper.scrapeUid", generateRandomString());
+    // }, 2000);
+  }, [lastMessageId, form, _scrapeChannel, arr, scraper.count]);
+
+  useEffect(() => {
+    if (scraper.scraping && !scraper.paused) {
+      if (
+        !lastMessageId?.new ||
+        (lastMessageId?.new && lastMessageId?.new != lastMessageId?.old)
+      ) {
+        __scrape()
+          .then((r) => {
+            //
+          })
+          .catch((e) => {
+            //
+          });
+      }
+    }
+  }, [lastMessageId, scraper.scraping, scraper.paused]);
+  async function autoScrape() {
+    form.setValue("scraper.scraping", true);
+    const c = generateRandomString();
+    form.setValue("scraper.scrapeUid", c);
+    setLastMessageId((c) => ({ ...c, new: data?.lastMessageId }));
   }
+
+  function resume() {
+    form.setValue("scraper.paused", false);
+    form.setValue("scraper.msg", null);
+    form.setValue("scraper.scrapeUid", generateRandomString());
+  }
+
   return (
-    <>
-      {username}
-      <div>
+    <Container>
+      <Header
+        title={`${username}`}
+        back="."
+        Actions={
+          <>
+            <Menu.Item href={`${username}/forwarder`}>Chat Forwarder</Menu.Item>
+            <Menu.Item onClick={clearChannel}>Clear Channel</Menu.Item>
+          </>
+        }
+      />
+      <Section>
         <div>
           <div className="grid grid-cols-2">
             <span>Message Scraped: {data?.stat.scraped}</span>
             <span>Forwareded: {data?.stat?.forwared}</span>
             <span>Blogs: {data?.stat?.blogs}</span>
-            <span>Last Scrape ID: {data?.lastMessageId}</span>
+            <span>Last Scrape ID: {lastMessageId?.new}</span>
           </div>
         </div>
         <Form {...form}>
@@ -174,7 +210,6 @@ export default function Channel({ params }) {
           <Button action={autoScrape}>Auto-Scrape</Button>
           {/* <Button onClick={forwardMessage}>Forward Message</Button> */}
         </div>
-        <Button action={clearChannel}>Clear Channel</Button>
 
         <div className="">
           {scraper.paused && (
@@ -184,7 +219,7 @@ export default function Channel({ params }) {
             </>
           )}
         </div>
-      </div>
-    </>
+      </Section>
+    </Container>
   );
 }

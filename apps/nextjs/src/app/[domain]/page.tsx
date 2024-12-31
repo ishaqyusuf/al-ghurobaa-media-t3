@@ -5,7 +5,7 @@ import { db } from "@acme/db";
 import { api, HydrateClient } from "~/trpc/server";
 import { AuthShowcase } from "../_components/auth-showcase";
 
-export const runtime = "edge";
+// export const runtime = "edge";
 
 export default async function HomePage() {
   // const schools = await db.query.School.findMany();

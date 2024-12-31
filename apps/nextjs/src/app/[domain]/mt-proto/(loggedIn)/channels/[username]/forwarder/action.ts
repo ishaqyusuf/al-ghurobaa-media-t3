@@ -35,6 +35,12 @@ export async function getForwarderData(username) {
   return {
     ...channel,
     pendingForwardCount,
+    watchers: channel.watchers.map((watcher) => {
+      return {
+        watcher,
+        fwids: [] as number[],
+      };
+    }),
     _meta: {
       status: "idle" as "idle" | "loading" | "success" | "error",
       forwardUid: "",
@@ -53,12 +59,13 @@ interface ForwardProps {
   where?: Prisma.MessageForwardWhereInput;
   watcherId?;
 }
-export async function forward({
+export async function forwardUseCase({
   username,
   uid,
   take = 10,
   where = {
     forwardedAt: null,
+    watcherId: null,
   },
   ...props
 }: ForwardProps) {
@@ -67,74 +74,70 @@ export async function forward({
     where: { username },
     select: {
       id: true,
-
       forwards: {
         where,
         take,
       },
     },
   });
-  return await db.$transaction(async (tx) => {
-    const fwids = channel?.forwards.map((s) => s.messageId) || [];
-    // const date = new Date();
-    const forwardedAt = new Date();
-    //   date.setSeconds(date.getSeconds() < 30 ? 0 : 30),
-    const w = props.watcherId
-      ? await db.messageForwardWatcher.update({
-          where: {
-            id: props.watcherId,
-          },
-          data: {
-            forwardedAt,
-            forwardCount: fwids.length,
-            capturedCount: 0,
-            status: "in-progress",
-          },
-        })
-      : await db.messageForwardWatcher.create({
-          data: {
-            id: uid,
-            forwardedAt,
-            forwardCount: fwids.length,
-            capturedCount: 0,
-            status: "in-progress",
-            channel: {
-              connect: {
-                id: channel.id,
+  console.log(where);
+
+  return await db.$transaction(
+    async (tx) => {
+      const fwids = channel?.forwards.map((s) => s.messageId) || [];
+      // const date = new Date();
+      const forwardedAt = new Date();
+      //   date.setSeconds(date.getSeconds() < 30 ? 0 : 30),
+      const w = props.watcherId
+        ? await tx.messageForwardWatcher.update({
+            where: {
+              id: props.watcherId,
+            },
+            data: {
+              forwardedAt,
+              forwardCount: fwids.length,
+              capturedCount: 0,
+              status: "in-progress",
+            },
+          })
+        : await tx.messageForwardWatcher.create({
+            data: {
+              id: uid,
+              forwardedAt,
+              forwardCount: fwids.length,
+              capturedCount: 0,
+              status: "in-progress",
+              channel: {
+                connect: {
+                  id: channel.id,
+                },
               },
             },
-          },
-        });
-    const ids = await forwardMessage(client, username, fwids);
-    if (ids) {
-      await db.messageForward.updateMany({
-        where: {
-          id: {
-            in: fwids,
-          },
-        },
-        data: {
-          forwardedAt,
-        },
-      });
-      if (!props.watcherId)
-        await db.messageForward.updateMany({
+          });
+      const ids = await forwardMessage(client, username, fwids);
+      if (ids) {
+        const resp = await tx.messageForward.updateMany({
           where: {
-            id: {
+            messageId: {
               in: fwids,
             },
           },
           data: {
-            watcherId: w.id,
+            forwardedAt,
+            watcherId: props.watcherId || w.id,
           },
         });
-    }
-    return {
-      fwids,
-      watcher: w,
-      status: "Forwarded",
-    };
-  });
+      }
+      return {
+        fwids,
+        watcher: w,
+        status: "Forwarded",
+      };
+    },
+    {
+      timeout: 10000,
+    },
+  );
 }
 export async function reforwardWatcherAction(id) {
   const watcher = await db.messageForwardWatcher.findFirstOrThrow({
@@ -154,7 +157,8 @@ export async function reforwardWatcherAction(id) {
       },
     },
   });
-  return await forward({
+  return await forwardUseCase({
+    watcherId: id,
     where: {
       watcherId: id,
     },
@@ -186,7 +190,7 @@ export async function getWatcherAction(id) {
     },
   });
 }
-export async function watcherActionCompleted(id) {
+export async function watcherActionCompletedAction(id) {
   const result = await db.messageForwardWatcher.update({
     where: {
       id,
@@ -205,6 +209,8 @@ export async function watcherActionCompleted(id) {
       },
     },
   });
+  console.log(result);
+
   let lastDate: any = null;
   const blogForward = result.blogs.map((blog, index) => {
     let date: any = result.forwards[index]?.publishedDate;
@@ -229,6 +235,8 @@ export async function watcherActionCompleted(id) {
     },
     {} as { ids: number[]; date }[],
   );
+  console.log(grouped);
+
   // promise all update group blogs and set blogDate
   await Promise.all(
     Object.values(grouped).map(async (grp) => {

@@ -1,11 +1,11 @@
 import { createContext, useContext, useEffect } from "react";
 
-import { useForm } from "@acme/ui/form";
+import { useFieldArray, useForm } from "@acme/ui/form";
 import { toast } from "@acme/ui/toast";
 
 import type { AsyncFn } from "~/type";
 import { generateRandomString } from "~/utils/db-utils";
-import { forward, getForwarderData } from "./action";
+import { forwardUseCase, getForwarderData } from "./action";
 
 export type FormType = AsyncFn<typeof getForwarderData>;
 
@@ -27,32 +27,44 @@ export const useCreateForwardPageContext = (username) => {
   useEffect(() => {
     init();
   }, []);
-  const { _meta, _count, id, ...rest } = form.watch();
+  const { _meta, _count, id } = form.watch();
+  const watchers = useFieldArray({
+    control: form.control,
+    name: "watchers",
+    keyName: "uid",
+  });
   async function startUploading() {
     form.setValue("_meta.forwardUid", generateRandomString());
   }
   useEffect(() => {
     if (_meta?.forwardUid && _meta?.pending) {
-      const date = new Date();
-
-      const fwd = forward({
+      console.log("FORWARDING>>");
+      forwardUseCase({
         username,
         uid: _meta.forwardUid,
         take: _meta.forwardCount,
       }).then((r) => {
+        console.log(r.fwids);
+
+        // return;
         form.setValue("_meta.pending", _meta.pending - _meta.forwardCount);
+        watchers.prepend({
+          watcher: r.watcher,
+          fwids: r.fwids,
+        });
       });
       // }, waitSeconds * 1000);
     }
-  }, [_meta?.forwardUid, _meta?.pending, _meta?.forwardCount, username, form]);
+  }, [_meta?.forwardUid]);
 
   return {
     id,
     _meta,
     _count,
     form,
-    ...rest,
+    watchers,
     startUploading,
+    init,
   };
 };
 export const Context = createContext<

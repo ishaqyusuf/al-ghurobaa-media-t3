@@ -41,38 +41,88 @@ const loadSessionFromFile = () => {
 interface ChannelsProps {
   offsetId?;
   limit?;
+  offsetDate?;
+  offsetPeer?;
+  pages?;
+  results?: {
+    id;
+    username;
+    title;
+    rtl;
+    photo;
+    date;
+  }[];
 }
-export async function channels({ offsetId = 0, limit = 100 }: ChannelsProps) {
-  const client = await initializeClient();
+export async function channels({
+  // offsetId = 1720712543,
+  offsetId,
+  limit = 150,
+  pages = 1,
+  // offsetDate = 1720712543,
 
+  offsetDate,
+  results = [],
+  offsetPeer = new Api.InputPeerEmpty(),
+}: ChannelsProps) {
+  const client = await initializeClient();
+  let hasMore = false;
   const result = await client.invoke(
     new Api.messages.GetDialogs({
-      //   offsetDate: 0,
-      offsetId: 0,
-      offsetPeer: new Api.InputPeerEmpty(),
-      limit: 100, // Adjust this value to fetch more dialogs
+      offsetDate,
+      offsetId,
+      // offsetId: 2055500106,
+      offsetPeer,
+      limit,
+      // limit: 100, // Adjust this value to fetch more dialogs
       //    hash: 0,
     }),
   );
-  const channelDialogs = result.dialogs.filter(
-    (dialog) => dialog.peer instanceof Api.PeerChannel,
-  );
-  console.log(result.dialogs?.length);
+  // const channelDialogs = result.dialogs.filter(
+  //   (dialog) => dialog.peer instanceof Api.PeerChannel,
+  // );
 
   const dialogs = result.toJSON();
-  if ("chats" in dialogs) {
-    const result = dialogs.chats.map((channel, index) => ({
-      id: channel,
-      title: channel.title,
-      className: channel.className,
-      username: channel.username || null,
-      isBroadcast: channel.broadcast || false, // Indicates if it's a broadcast channel
-      // raw: index < 10 ? channel : null,
-      rtl: isRTL(channel.title),
-      photo: channel.photo?.photoId,
-    }));
 
-    return result;
+  if ("chats" in dialogs) {
+    dialogs.chats.map((channel, index) => {
+      if ("username" in channel)
+        results?.push({
+          id: channel.id,
+          date: !channel.date ? null : new Date(channel.date * 1000),
+          title: channel.title,
+          username: channel.username || null,
+          // isBroadcast: channel.broadcast || false,
+          rtl: isRTL(channel.title),
+          photo: (channel.photo as any)?.photoId,
+        });
+      return {};
+    });
+    const dlen = dialogs?.dialogs?.length - 1;
+    if ("messages" in dialogs) {
+      if (dialogs.messages.length > 0) {
+        const lastMessage = dialogs.messages[dialogs.messages.length - 1];
+
+        if (lastMessage && "date" in lastMessage) {
+          offsetId = lastMessage.id;
+          offsetDate = lastMessage.date;
+          offsetPeer = dialogs?.dialogs?.[dlen]?.peer;
+          hasMore = true;
+        }
+      }
+    }
+    console.log(hasMore, pages, results.length);
+    if (hasMore && pages < 6) {
+      pages += 1;
+
+      return await channels({
+        offsetPeer,
+        offsetDate,
+        offsetId,
+        pages,
+        results,
+      });
+    }
+    return results;
   }
 }
 export async function logout() {

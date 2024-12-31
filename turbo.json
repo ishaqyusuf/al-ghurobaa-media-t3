@@ -53,6 +53,7 @@
     }
   },
   "globalEnv": [
+    "DIRECT_URL",
     "POSTGRES_URL",
     "NEXT_PUBLIC_ROOT_DOMAIN",
     "AUTH_DISCORD_ID",

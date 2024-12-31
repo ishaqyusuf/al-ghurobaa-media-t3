@@ -25,10 +25,11 @@ export async function scrapeChannel(channelName, { ...props }: Props) {
 
   const channel = await client.getEntity(`t.me/${channelName}`);
   const dbChannel = await getChannelWithLastScrapeMessageId(channelName);
+  const offsetId = props.scrapeLatest ? 0 : props.lastMessageId;
   const response = await client.invoke(
     new Api.messages.GetHistory({
       peer: channel,
-      offsetId: props.scrapeLatest ? 0 : props.lastMessageId, // || dbChannel.lastMessageId,
+      offsetId, // || dbChannel.lastMessageId,
       // offsetId: 12003,
       limit: props.limit || 0,
     }),
@@ -39,7 +40,10 @@ export async function scrapeChannel(channelName, { ...props }: Props) {
     const unknownFormats = [];
     const formattedMessages: ScrapedMessage[] = response.messages
       .filter((msg, index) => {
-        if (response.messages.length == index + 1) lastScrapeMessageId = msg.id;
+        if (response.messages.length == index + 1) {
+          lastScrapeMessageId = msg.id;
+          console.log(msg.id);
+        }
         if ("media" in msg) {
           if (msg.media instanceof Api.MessageMediaPhoto) {
             return props.image;
@@ -94,6 +98,8 @@ export async function scrapeChannel(channelName, { ...props }: Props) {
     try {
       if (!formattedMessages.length) throw new Error("Nothing to scrape");
       const messageIds = await registerIncomingMessages(formattedMessages);
+      console.log(messageIds, lastScrapeMessageId);
+
       // const fwrd = await forwardMessage(
       //   client,
       //   channelName,

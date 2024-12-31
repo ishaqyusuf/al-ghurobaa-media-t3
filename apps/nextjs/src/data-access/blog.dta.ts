@@ -1,7 +1,6 @@
 "use server";
 
 import type { Message } from "grammy/types";
-import { Api } from "grammy";
 
 import { db } from "@acme/db";
 
@@ -140,11 +139,17 @@ export async function createBlog(props: Props) {
             ? {
                 create: {
                   file: {
-                    create: {
-                      fileId: thumbnail.file_id,
-                      fileSize: formatSize(thumbnail.file_size),
-                      fileType: "img",
-                      mimeType: "image/png" as MimeType,
+                    connectOrCreate: {
+                      create: {
+                        fileId: thumbnail.file_id,
+                        fileSize: formatSize(thumbnail.file_size),
+                        fileType: "img",
+                        mimeType: "image/png" as MimeType,
+                        fileUniqueId: thumbnail.file_unique_id,
+                      },
+                      where: {
+                        fileUniqueId: thumbnail.file_unique_id,
+                      },
                     },
                   },
                 },
@@ -167,16 +172,21 @@ export async function createBlog(props: Props) {
                 : undefined,
               mimeType: mime_type as any,
               file: {
-                create: {
-                  height,
-                  width,
-                  duration: duration,
-                  mimeType: mime_type,
-                  fileUniqueId: file_unique_id,
-                  fileId: file_id,
-                  fileName: file_name,
-                  fileSize: formatSize(file_size),
-                  fileType: audio ? "audio" : video ? "video" : "document",
+                connectOrCreate: {
+                  where: {
+                    fileUniqueId: file_unique_id,
+                  },
+                  create: {
+                    height,
+                    width,
+                    duration: duration,
+                    mimeType: mime_type,
+                    fileUniqueId: file_unique_id,
+                    fileId: file_id,
+                    fileName: file_name,
+                    fileSize: formatSize(file_size),
+                    fileType: audio ? "audio" : video ? "video" : "document",
+                  },
                 },
               },
             },
@@ -189,7 +199,6 @@ export async function createBlog(props: Props) {
     await messageCaptured(watcherId);
   }
   console.log(blog);
-
   return blog;
 }
 function blogTypeByMime(mime): BlogType {
@@ -204,9 +213,9 @@ export async function getCurrentWatcher() {
   const watcher = await db.messageForwardWatcher.findFirst({
     where: {
       status: "in-progress",
-      forwardedAt: {
-        lte: new Date(Date.now() - 1000 * 60 * 2),
-      },
+      // forwardedAt: {
+      //   lte: new Date(Date.now() - 1000 * 60 * 2),
+      // },
     },
     include: {
       channel: true,

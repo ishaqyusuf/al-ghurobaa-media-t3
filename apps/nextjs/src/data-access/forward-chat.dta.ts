@@ -121,8 +121,8 @@ export async function getChatStat(username) {
     },
   };
 }
-export async function clearChannelRecord(username) {
-  await db.messageForward.deleteMany({
+export async function clearChannelForwardRecord(username) {
+  await db.messageForwardWatcher.deleteMany({
     where: {
       channel: {
         username,
@@ -134,4 +134,14 @@ export async function clearChannelRecord(username) {
       channel: { username },
     },
   });
+}
+export async function clearChannelRecord(username) {
+  await db.messageForward.deleteMany({
+    where: {
+      channel: {
+        username,
+      },
+    },
+  });
+  await clearChannelForwardRecord(username);
 }

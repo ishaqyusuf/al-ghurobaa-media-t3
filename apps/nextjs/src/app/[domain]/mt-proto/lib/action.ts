@@ -12,13 +12,18 @@ export async function loadChannels() {
   try {
     return await channels({});
   } catch (error) {
-    console.log(error);
+    if ("code" in error && error.code == 401) {
+      console.log(error);
+    }
     return [];
     // await logoutAction();
   }
 }
 export async function logoutAction() {
-  await logout();
-
-  redirect("/mt-proto");
+  try {
+    await logout();
+    redirect("/mt-proto");
+  } catch (error) {
+    console.log(error);
+  }
 }
