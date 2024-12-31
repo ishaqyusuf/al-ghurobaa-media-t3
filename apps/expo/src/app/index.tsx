@@ -12,12 +12,29 @@ import { infiniteQueryOptions, useInfiniteQuery } from "@tanstack/react-query";
 
 import type { BlogPost } from "./components/type";
 import { api } from "~/utils/api";
+import AudioPostCard from "./components/audio-post-card";
 import { PicturePostCard } from "./components/picture-post-card";
 import { TextPostCard } from "./components/text-post-card";
 
 export default function Index() {
   const utils = api.useUtils();
-  const { data, status, refetch, ...ct } = api.blog.index.useQuery({});
+  const {
+    data,
+    status,
+    refetch,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    ...ct
+  } = api.blog.index.useInfiniteQuery(
+    {
+      limit: 10,
+    },
+    {
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+    },
+  );
+
   // const {
   //   data,
   //   isLoading,
@@ -49,10 +66,12 @@ export default function Index() {
   //     },
   //   }),
   // );
-  //  api.blog.index.useQuery
-  const list = useMemo(() => {
-    return data?.posts ?? [];
-  }, [data]);
+  const flatData = useMemo(() => {
+    const result = data?.pages?.flatMap((page) => page.data ?? []) ?? [];
+    // return result.filter((a, i) => i < 1);
+    return result;
+  }, [data?.pages]);
+
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Function to handle refreshing
@@ -84,9 +103,16 @@ export default function Index() {
   //   });
   // };
   const renderPostCard = ({ item }: { item: BlogPost }) => {
+    const type = item.type;
+    return (
+      <View className="border-y border-muted-foreground/20 p-2 px-4">
+        {type == "text" && <TextPostCard post={item} />}
+        {item.audio && <AudioPostCard post={item} />}
+      </View>
+    );
     return (
       <View>
-        <Text>LS: amet</Text>
+        <Text>{item.id}</Text>
       </View>
     );
     // return (
@@ -112,10 +138,10 @@ export default function Index() {
   return (
     <FlatList
       ref={listRef}
-      data={list}
+      data={flatData}
       // renderItem={({ item }) => <PostCard post={item} />} // Render your post card
       // keyExtractor={item => item.id}
-      keyExtractor={(item) => item?.id.toString()}
+      keyExtractor={(item) => item?.id?.toString()}
       renderItem={renderPostCard}
       onScroll={handleScroll}
       viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
@@ -131,24 +157,20 @@ export default function Index() {
           <Text>LIST HEADER</Text>
           {/* <Text>{(isRefetching || isLoading) && "REFETCHING>>>"}</Text> */}
           <Text>{status}</Text>
+          {/* <Text>{JSON.stringify(data || {})}</Text> */}
         </View>
       }
-      // ListFooterComponent={
-      //   isFetchingNextPage ? (
-      //     <ActivityIndicator size="small" color="#0000ff" />
-      //   ) : null
-      // }
-      // onEndReached={() => {
-      //   if (hasNextPage && !isFetchingNextPage) {
-      //     fetchNextPage();
-      //   }
-      // }}
-      // onEndReachedThreshold={0.5} // Load more when 50% from the end
-      // ListFooterComponent={
-      //   isFetchingNextPage ? (
-      //     <ActivityIndicator size="large" />
-      //   ) : null
-      // }
+      ListFooterComponent={
+        isFetchingNextPage ? (
+          <ActivityIndicator size="small" color="#0000ff" />
+        ) : null
+      }
+      onEndReached={() => {
+        if (hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      }}
+      onEndReachedThreshold={0.5} // Load more when 50% from the end
     />
   );
 

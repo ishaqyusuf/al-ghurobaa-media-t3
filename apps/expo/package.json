@@ -58,7 +58,8 @@
     "eslint": "catalog:",
     "prettier": "catalog:",
     "tailwindcss": "^3.4.4",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "zustand": "catalog:"
   },
   "prettier": "@acme/prettier-config"
 }

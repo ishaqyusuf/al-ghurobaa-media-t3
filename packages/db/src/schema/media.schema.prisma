@@ -12,8 +12,10 @@ model Media {
     blogId          Int?
     mediaLocation   MediaLocation?    @relation(fields: [mediaLocationId], references: [id])
     mediaLocationId Int?
+    albumId         Int?
     playHistories   RecentlyPlayed[]
     PlaylistEpisode PlaylistEpisode[]
+    album           Album?            @relation(fields: [albumId], references: [id])
 
     @@index([fileId])
 }

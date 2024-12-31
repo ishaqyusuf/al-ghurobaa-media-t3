@@ -14,10 +14,10 @@ export const TextPostCard = ({ post }: CardProps) => {
     );
   }
   return (
-    <View>
+    <View className="">
       <TouchableOpacity onPress={openModal}>
-        <Text className="leading-relaxed text-white">
-          {post.description
+        <Text className="text-right text-sm leading-relaxed text-white">
+          {post.content
             ?.split("\n")
             .map((s) => s.trim())
             .filter(Boolean)

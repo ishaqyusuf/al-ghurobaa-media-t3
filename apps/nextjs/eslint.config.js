@@ -1,4 +1,5 @@
 import baseConfig, { restrictEnvAccess } from "@acme/eslint-config/base";
+import { customConfig } from "@acme/eslint-config/custom";
 import nextjsConfig from "@acme/eslint-config/nextjs";
 import reactConfig from "@acme/eslint-config/react";
 
@@ -11,14 +12,5 @@ export default [
   ...reactConfig,
   ...nextjsConfig,
   ...restrictEnvAccess,
-  {
-    rules: {
-      "@typescript-eslint/no-unnecessary-condition": "off",
-      "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/prefer-nullish-coalescing": "off",
-      "@typescript-eslint/require-await": "off",
-      "@typescript-eslint/no-unsafe-return": "off",
-      "@typescript-eslint/no-floating-promises": "off",
-    },
-  },
+  ...customConfig,
 ];
