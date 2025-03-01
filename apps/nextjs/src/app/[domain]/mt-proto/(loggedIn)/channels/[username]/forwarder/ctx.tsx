@@ -36,20 +36,22 @@ export const useCreateForwardPageContext = (username) => {
   async function startUploading() {
     form.setValue("_meta.forwardUid", generateRandomString());
   }
+
   useEffect(() => {
     if (_meta?.forwardUid && _meta?.pending) {
       console.log("FORWARDING>>");
+      document.title = "Forwarding...";
       forwardUseCase({
         username,
         uid: _meta.forwardUid,
         take: _meta.forwardCount,
       }).then((r) => {
-        console.log(r.fwids);
+        console.log(r);
 
         // return;
         form.setValue("_meta.pending", _meta.pending - _meta.forwardCount);
-        watchers.prepend({
-          watcher: r.watcher,
+        watchers.append({
+          watcher: r.watcher as any,
           fwids: r.fwids,
         });
       });

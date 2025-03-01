@@ -18,7 +18,7 @@ export function ForwarderWatchers({}: Props) {
   const ctx = useForwardPageContext();
   const { fields, remove } = ctx.watchers;
   return (
-    <div>
+    <div className="flex flex-col-reverse">
       {fields?.map((watcher, index) => (
         <WatcherInfo
           index={index}
@@ -43,26 +43,50 @@ function WatcherInfo({ watcher, index }: WatcherInfoProps) {
   // }
   // if (watcher.status === "in-progress") {
   const [wdata, setWdata] = useState(watcher.watcher);
-  const [status, setStatus] = useState(watcher?.watcher?.status);
-  const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
+  function setDocTitle(title) {
+    document.title = `#W-${index}: ${title}`;
+  }
+  // const [watchState,setWathc]
 
+  const [watchUid, setWatchUid] = useState(null);
+  // useEffect(() => {
+  //   if (watchUid) {
+  //     setDocTitle("Watching...");
+
+  //   }
+  // }, [watchUid]);
+
+  const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
+  const [lastWatch, setLastWatch] = useState<any>(null);
+  const [watchResult, setWatchResult] = useState("");
+  useEffect(() => {
+    setLastWatch(new Date());
+  }, [watchResult]);
   const fetchWatcherAction = async () => {
-    if (isOlderThanOneMinute(wdata.forwardedAt as any) || !status) {
-      setStatus("Watcher expired.");
+    if (wdata.status == "completed") return;
+    if (isOlderThanOneMinute()) {
+      // setStatus("Watcher expired.");
       clearIntervalIfActive();
+      setDocTitle("Expired");
       return;
     }
-    setStatus("checking...");
+    // setStatus("checking...");
     try {
       const result = await getWatcherAction(wdata.id);
-      setWdata(result);
-      console.log(result);
-
+      setWdata(result as any);
+      let wResult = `${result.capturedCount}/${result.forwardCount}`;
+      if (wResult != watchResult) {
+        console.log({ wResult, watchResult });
+        setWatchResult(wResult);
+        setDocTitle(`Watching | ${wResult}`);
+      }
       if (result.capturedCount === result.forwardCount) {
         clearIntervalIfActive();
         await watcherActionCompleted();
-        setStatus(null);
+        // setStatus("Completed");
         toast.success("Watch Batch completed.");
+        setDocTitle("Complete!");
+        // ctx.startUploading();
       } else if (result.status !== "in-progress") {
         clearIntervalIfActive();
       }
@@ -78,15 +102,22 @@ function WatcherInfo({ watcher, index }: WatcherInfoProps) {
       setIntervalId(null);
     }
   };
-  const isOlderThanOneMinute = (createdAt: string): boolean => {
-    const createdAtTime = new Date(createdAt).getTime();
+  const isOlderThanOneMinute = (): boolean => {
+    let createdAt = lastWatch;
+    console.log({ lastWatch });
+    if (!createdAt) return false;
+    const createdAtTime = createdAt.getTime();
     const currentTime = Date.now();
     return currentTime - createdAtTime > 60 * 1000; // 1 minute in milliseconds
   };
 
   useEffect(() => {
     if (wdata.status === "in-progress" && !intervalId) {
-      startWatcher();
+      if (wdata.forwardCount == wdata.capturedCount) {
+        watcherActionCompleted().then((e) => {
+          setDocTitle("Complete!");
+        });
+      } else startWatcher();
     }
 
     return () => {
@@ -107,13 +138,13 @@ function WatcherInfo({ watcher, index }: WatcherInfoProps) {
   }
   const stopWatcher = () => {
     clearIntervalIfActive();
-    setStatus("Watcher stopped.");
+    // setStatus("Watcher stopped.");
   };
   async function reforward() {
     try {
       const resp = await reforwardWatcherAction(wdata.id);
-      setWdata(resp.watcher);
-      setStatus("Restarting watcher...");
+      setWdata(resp.watcher as any);
+      // setStatus("Restarting watcher...");
       startWatcher(); // Restart the watcher after reforward action
     } catch (error) {
       console.error("Error restarting watcher:", error);
@@ -124,10 +155,11 @@ function WatcherInfo({ watcher, index }: WatcherInfoProps) {
     await watcherActionCompletedAction(wdata.id);
     const wa = await getWatcherAction(wdata.id);
     console.log(wa);
-    setWdata(wa);
+    setWdata(wa as any);
   }
   return (
     <div className="flex gap-4 border-b text-sm">
+      <div className="">{index + 1}.</div>
       <div>
         <p>{wdata.id}</p>
         <p>{wdata.forwardedAt?.toDateString()}</p>

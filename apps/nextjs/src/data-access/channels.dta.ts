@@ -6,18 +6,53 @@ import { db } from "@acme/db";
 import { channels } from "~/app/[domain]/mt-proto/lib";
 import { isRTL } from "~/utils/db-utils";
 
-interface SearchParams {}
+interface SearchParams {
+  q: string;
+  show?: "scrapes";
+}
 export async function channelsListDta(searchParams: SearchParams) {
+  const where: Prisma.ChannelWhereInput[] = [];
+  if (searchParams.q) {
+    where.push({
+      OR: [
+        {
+          title: { contains: searchParams.q },
+        },
+        {
+          username: { contains: searchParams.q },
+        },
+      ],
+    });
+  }
+  switch (searchParams.show) {
+    case "scrapes":
+      where.push({
+        forwards: {
+          some: {},
+        },
+      });
+      break;
+  }
   const channels = await db.channel.findMany({
+    where: where.length > 0 ? { AND: where } : where[0] || undefined,
     select: {
       id: true,
       title: true,
       username: true,
+      _count: {
+        select: {
+          forwards: true,
+          blogs: true,
+          watchers: true,
+        },
+      },
     },
     orderBy: {
       title: "asc",
     },
   });
+  console.log(channels.length);
+
   return channels.map((channel) => {
     return {
       ...channel,

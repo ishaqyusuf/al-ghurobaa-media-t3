@@ -14,7 +14,11 @@ export async function getForwarderData(username) {
     select: {
       id: true,
       username: true,
-      watchers: true,
+      watchers: {
+        orderBy: {
+          createdAt: "asc",
+        },
+      },
       _count: {
         select: {
           forwards: {
@@ -37,7 +41,10 @@ export async function getForwarderData(username) {
     pendingForwardCount,
     watchers: channel.watchers.map((watcher) => {
       return {
-        watcher,
+        watcher: {
+          ...watcher,
+          status: watcher.status as "in-progress" | "completed",
+        },
         fwids: [] as number[],
       };
     }),

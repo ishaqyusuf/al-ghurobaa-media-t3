@@ -11,10 +11,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
 import { infiniteQueryOptions, useInfiniteQuery } from "@tanstack/react-query";
 
-import type { BlogPost } from "./components/type";
+import type { BlogPost } from "../app/components/type";
 import { api } from "~/utils/api";
-import { PicturePostCard } from "./components/picture-post-card";
-import { TextPostCard } from "./components/text-post-card";
+import { PicturePostCard } from "../app/components/picture-post-card";
+import { TextPostCard } from "../app/components/text-post-card";
 
 export default function Index() {
   const utils = api.useUtils();

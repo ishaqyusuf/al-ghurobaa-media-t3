@@ -18,8 +18,9 @@ interface Props {
   back?: string;
   title?;
   Actions?;
+  children?;
 }
-export default function Header({ back, title, Actions }: Props) {
+export default function Header({ back, children, title, Actions }: Props) {
   const [show, setShow] = useState(false);
   useEffect(() => {
     setTimeout(() => {
@@ -48,6 +49,7 @@ export default function Header({ back, title, Actions }: Props) {
           <TextWithTooltip text={title} />
         </Label>
         <div className="flex-1" />
+        {children}
         <Menu>
           {Actions}
           <Menu.Item href={`mt-proto/channels`}>Home</Menu.Item>

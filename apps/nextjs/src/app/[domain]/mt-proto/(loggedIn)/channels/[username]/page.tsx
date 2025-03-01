@@ -17,6 +17,7 @@ import {
   getChatStat,
 } from "~/data-access/forward-chat.dta";
 import { generateRandomString } from "~/utils/db-utils";
+import { useLocalStorage } from "~/utils/use-local-storage";
 import { scrapeChannel } from "../../../lib/scrape-channel";
 
 // @SoundBooks1
@@ -32,10 +33,12 @@ export default function Channel({ params }) {
     limit: 100,
     scrapeLatest: false,
     scrapeProps: {
+      ignoreError: false,
       document: true,
       audio: true,
       image: true,
       text: true,
+      video: true,
     },
     scraper: {
       scraping: false,
@@ -49,11 +52,27 @@ export default function Channel({ params }) {
   const form = useForm({
     defaultValues,
   });
+  const channelScrapePropsKey = `scraper/${username}`;
+  const [localData, setLocalData] = useLocalStorage(
+    channelScrapePropsKey,
+    defaultValues.scrapeProps,
+    (value) => {
+      console.log(value);
+
+      Object.entries(value).map(([k, v]) => {
+        form.setValue(k, v);
+      });
+    },
+  );
+
   const arr = useFieldArray({
     control: form.control,
     name: "scraper.scrapingRecords",
   });
-  const scraper = form.watch("scraper");
+  const [scraper, ignoreError] = form.watch([
+    "scraper",
+    "scrapeProps.ignoreError",
+  ]);
 
   function load() {
     getChatStat(username)
@@ -80,6 +99,9 @@ export default function Channel({ params }) {
     old: null,
     new: null,
   });
+  useEffect(() => {
+    document.title = `Scraping... ${lastMessageId?.new}`;
+  }, [lastMessageId?.new]);
   const _scrapeChannel = useCallback(async () => {
     const formData = form.getValues();
     const resp = await scrapeChannel(username, {
@@ -115,13 +137,20 @@ export default function Channel({ params }) {
     if (r.unknownFormats?.length)
       msg = `Unknown Formats: ${r.unknownFormats.join(", ")}`;
     if (msg) {
-      form.setValue("scraper.paused", true);
+      if (!ignoreError) {
+        form.setValue("scraper.paused", true);
+      }
       form.setValue("scraper.msg", msg as any);
     } //else
+    if (r.lastScrapeMessageId == 1) {
+      toast.success("Completed.");
+      return;
+    }
     setLastMessageId((old) => ({
       ...old,
       new: r.lastScrapeMessageId,
     }));
+
     // setTimeout(() => {
     //   form.setValue("scraper.scrapeUid", generateRandomString());
     // }, 2000);
@@ -148,6 +177,7 @@ export default function Channel({ params }) {
     const c = generateRandomString();
     form.setValue("scraper.scrapeUid", c);
     setLastMessageId((c) => ({ ...c, new: data?.lastMessageId }));
+    setLocalData(form.getValues("scrapeProps"));
   }
 
   function resume() {
@@ -179,7 +209,7 @@ export default function Channel({ params }) {
         </div>
         <Form {...form}>
           <div className="m-4 grid grid-cols-4 gap-2">
-            {["audio", "document", "image", "text"].map((a) => {
+            {["audio", "document", "image", "text", "video"].map((a) => {
               return (
                 <FormCheckbox
                   key={a}
@@ -202,6 +232,11 @@ export default function Channel({ params }) {
               control={form.control}
               name="scrapeLatest"
               label="Scrape Latest"
+            />
+            <FormCheckbox
+              control={form.control}
+              name="scrapeProps.ignoreError"
+              label="Ignore Error"
             />
           </div>
         </Form>

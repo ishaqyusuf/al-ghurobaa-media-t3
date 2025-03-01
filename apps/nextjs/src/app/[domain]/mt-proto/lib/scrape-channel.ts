@@ -21,7 +21,6 @@ interface Props {
 }
 export async function scrapeChannel(channelName, { ...props }: Props) {
   const client = await initializeClient();
-  console.log(props);
 
   const channel = await client.getEntity(`t.me/${channelName}`);
   const dbChannel = await getChannelWithLastScrapeMessageId(channelName);
@@ -36,13 +35,12 @@ export async function scrapeChannel(channelName, { ...props }: Props) {
   );
   if ("messages" in response) {
     let lastScrapeMessageId;
-    console.log(response.messages.length);
+
     const unknownFormats = [];
     const formattedMessages: ScrapedMessage[] = response.messages
       .filter((msg, index) => {
         if (response.messages.length == index + 1) {
           lastScrapeMessageId = msg.id;
-          console.log(msg.id);
         }
         if ("media" in msg) {
           if (msg.media instanceof Api.MessageMediaPhoto) {
@@ -70,10 +68,8 @@ export async function scrapeChannel(channelName, { ...props }: Props) {
                     console.log(mt);
                     return props.audio;
                   case "image":
-                    console.log(mt);
                     return props.image;
                   case "video":
-                    console.log(mt);
                     return props.video;
                   default:
                     unknownFormats.push(mt);
@@ -93,12 +89,12 @@ export async function scrapeChannel(channelName, { ...props }: Props) {
         };
       });
     console.log(lastScrapeMessageId);
-    console.log(formattedMessages);
+    // console.log(formattedMessages);
 
     try {
       if (!formattedMessages.length) throw new Error("Nothing to scrape");
       const messageIds = await registerIncomingMessages(formattedMessages);
-      console.log(messageIds, lastScrapeMessageId);
+      // console.log(messageIds, lastScrapeMessageId);
 
       // const fwrd = await forwardMessage(
       //   client,
