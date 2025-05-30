@@ -3,8 +3,8 @@
 import Button from "@acme/ui/common/button";
 import { Menu } from "@acme/ui/common/menu";
 
-import Container, { Section } from "~/app/_components/container";
-import Header from "~/app/_components/header";
+import Container, { Section } from "~/components/container";
+import Header from "~/components/header";
 import { clearChannelForwardRecord } from "~/data-access/forward-chat.dta";
 import { Context, useCreateForwardPageContext } from "./ctx";
 import { ForwarderWatchers } from "./forward-watcher";

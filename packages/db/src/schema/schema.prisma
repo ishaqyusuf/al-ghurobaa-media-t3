@@ -4,7 +4,7 @@
 generator client {
     provider        = "prisma-client-js"
     relationMode    = "prisma"
-    previewFeatures = ["typedSql", "prismaSchemaFolder", "driverAdapters"]
+    previewFeatures = ["prismaSchemaFolder", "driverAdapters"]
 }
 
 datasource db {

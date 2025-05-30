@@ -1,11 +1,13 @@
 "use client";
 
-import { use, useEffect } from "react";
+import { use } from "react";
 import Link from "next/link";
-import { parseAsInteger, useQueryState } from "nuqs";
+import { useQueryState } from "nuqs";
 
 import { cn } from "@acme/ui";
 import { Badge } from "@acme/ui/badge";
+import Button from "@acme/ui/common/button";
+import { Icons } from "@acme/ui/common/icons";
 import { Menu } from "@acme/ui/common/menu";
 import TextWithTooltip from "@acme/ui/common/text-with-tooltip";
 import { Input } from "@acme/ui/input";
@@ -13,9 +15,9 @@ import { toast } from "@acme/ui/toast";
 
 import type { channelsListDta } from "~/data-access/channels.dta";
 import type { AsyncFn } from "~/type";
-import Header from "~/app/_components/header";
+import { updateChannelFavouriteAction } from "~/actions/update-channel-favourite-action";
+import Header from "~/components/header";
 import { updateChannelListDta } from "~/data-access/channels.dta";
-import { arabic } from "~/fonts";
 
 export default function ChannelClient({ promise }) {
   const list = use<AsyncFn<typeof channelsListDta>>(promise);
@@ -62,6 +64,7 @@ export default function ChannelClient({ promise }) {
             >
               Filter
             </Menu.Item>
+            <Menu.Item href="/mt-proto/worker">Worker</Menu.Item>
           </>
         }
       >
@@ -73,25 +76,62 @@ export default function ChannelClient({ promise }) {
         />
       </Header>
       {list?.map((channel, index) => (
-        <Link
-          href={`/mt-proto/channels/${channel.username}`}
-          className={cn(
-            channel.rtl ? `flex flex-row-reverse ${arabic.className}` : "flex",
-            "border-b px-4 py-1 hover:bg-muted-foreground/50",
-          )}
+        <div
+          dir=""
+          className="relative flex hover:bg-muted-foreground/50"
           key={index}
         >
-          <span>{index + 1}</span>
-          <span>{". "}</span>
-          <div className="inline-flex items-center space-x-2">
-            <TextWithTooltip
-              className="max-w-xs"
-              text={channel.title?.trim()}
-            />
-            <span className="text-muted-foreground">{channel.username}</span>
-            <Badge>{channel._count?.forwards}</Badge>
+          <Link
+            href={`/mt-proto/channels/${channel.username}`}
+            className={cn(
+              "relative flex-1",
+              // channel.rtl ? `sflex-row-reverse flex ${arabic.className}` : "flex",
+              "border-b px-4 py-1",
+            )}
+          >
+            <span>{index + 1}</span>
+            <span>{". "}</span>
+            <div className="inline-flex items-center space-x-2">
+              <div
+                className={cn("flex flex-col", channel.rtl && "items-end")}
+                dir={channel.rtl ? "rtl" : "ltr"}
+              >
+                <TextWithTooltip
+                  className="max-w-xs"
+                  text={channel.title?.trim()}
+                />
+                <span className="text-muted-foreground">
+                  {channel.username}
+                </span>
+              </div>
+            </div>
+          </Link>
+          <div className="absolute bottom-0 right-0 top-0 z-10 flex items-center">
+            <Badge variant={channel._count?.forwards ? "default" : "outline"}>
+              {channel._count?.forwards}
+            </Badge>
+            <Button
+              variant={"ghost"}
+              onClick={(e) => {
+                updateChannelFavouriteAction(
+                  channel.id,
+                  !channel.favourite,
+                ).then((e) => {});
+              }}
+              className="z-10"
+              size="xs"
+            >
+              <Icons.Heart
+                className={cn(
+                  "size-4",
+                  channel.favourite
+                    ? "text-red-600"
+                    : "text-muted-foreground/20",
+                )}
+              />
+            </Button>
           </div>
-        </Link>
+        </div>
       ))}
     </div>
   );

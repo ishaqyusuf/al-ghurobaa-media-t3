@@ -1,15 +1,19 @@
 "use server";
 
-import type { Prisma } from "@acme/db";
-import { db } from "@acme/db";
+// import type { Prisma } from "@acme/db";
+import { db, Prisma } from "@acme/db";
+
+
 
 import { channels } from "~/app/[domain]/mt-proto/lib";
 import { isRTL } from "~/utils/db-utils";
+
 
 interface SearchParams {
   q: string;
   show?: "scrapes";
 }
+
 export async function channelsListDta(searchParams: SearchParams) {
   const where: Prisma.ChannelWhereInput[] = [];
   if (searchParams.q) {
@@ -39,6 +43,7 @@ export async function channelsListDta(searchParams: SearchParams) {
       id: true,
       title: true,
       username: true,
+      favourite: true,
       _count: {
         select: {
           forwards: true,

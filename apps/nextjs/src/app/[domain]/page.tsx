@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 
+import { AuthShowcase } from "~/components/auth-showcase";
 import { HydrateClient } from "~/trpc/server";
-import { AuthShowcase } from "../_components/auth-showcase";
 
 // export const runtime = "edge";
 

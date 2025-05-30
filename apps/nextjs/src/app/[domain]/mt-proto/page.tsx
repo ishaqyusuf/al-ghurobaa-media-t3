@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
-import Container, { Section } from "~/app/_components/container";
-import Header from "~/app/_components/header";
+import Container, { Section } from "~/components/container";
+import Header from "~/components/header";
 import { isLoggedIn } from "./lib/action";
 import PageClient from "./page.client";
 

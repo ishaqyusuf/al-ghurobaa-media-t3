@@ -12,7 +12,7 @@ import { TextWithTooltip } from "@acme/ui/common/text-with-tooltip";
 import { Label } from "@acme/ui/label";
 import { PortalNode } from "@acme/ui/portal";
 
-import { logoutAction } from "../[domain]/mt-proto/lib/action";
+import { logoutAction } from "~/app/[domain]/mt-proto/lib/action";
 
 interface Props {
   back?: string;

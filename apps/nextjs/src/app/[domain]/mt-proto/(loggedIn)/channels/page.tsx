@@ -1,4 +1,4 @@
-import Container from "~/app/_components/container";
+import Container from "~/components/container";
 import { channelsListDta } from "~/data-access/channels.dta";
 import ChannelClient from "./page.client";
 

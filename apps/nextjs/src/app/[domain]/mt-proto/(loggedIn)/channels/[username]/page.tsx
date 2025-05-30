@@ -10,8 +10,8 @@ import { Form, useFieldArray, useForm } from "@acme/ui/form";
 import { toast } from "@acme/ui/toast";
 
 import type { GetChannelStat } from "~/data-access/forward-chat.dta";
-import Container, { Section } from "~/app/_components/container";
-import Header from "~/app/_components/header";
+import Container, { Section } from "~/components/container";
+import Header from "~/components/header";
 import {
   clearChannelRecord,
   getChatStat,

@@ -1,8 +1,9 @@
-import type { LucideIcon } from "lucide-react";
+import type { VariantProps } from "class-variance-authority";
+import type { LucideIcon, LucideProps } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { Cross2Icon } from "@radix-ui/react-icons";
-import { cva, VariantProps } from "class-variance-authority";
+import { Cross2Icon, HeartFilledIcon } from "@radix-ui/react-icons";
+import { cva } from "class-variance-authority";
 import {
   AlertTriangle,
   ArrowDown,
@@ -38,6 +39,7 @@ import {
   FileText,
   FolderClosed,
   FolderGit2,
+  HeartIcon,
   HelpCircle,
   Home,
   ImageIcon,
@@ -48,7 +50,6 @@ import {
   LayoutTemplate,
   LineChart,
   Loader2,
-  LucideProps,
   Mail,
   MapPin,
   Image as media,
@@ -62,7 +63,6 @@ import {
   NewspaperIcon,
   Package,
   PackageOpen,
-  Pencil,
   Percent,
   Phone,
   Pin,
@@ -90,6 +90,7 @@ import { cn } from "..";
 export type Icon = LucideIcon;
 
 export const Icons = {
+  Heart: HeartFilledIcon,
   box: Box,
   Menu: MoreHorizontal,
   pdf: File,
